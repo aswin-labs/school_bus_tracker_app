@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
-import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/tracking_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/google_map_view.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/tracking_bottom_sheet.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/tracking_map.dart';
 
 class TrackingScreen extends StatefulWidget {
   final int routeId;
@@ -19,37 +22,107 @@ class _TrackingScreenState extends State<TrackingScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
 
-  late TrackingProvider trackingProvider;
-
   static const double _minSize = 0.3;
   static const double _maxSize = 0.65;
+
+  static const double _rerouteThresholdMeters = 30;
+
+  late LiveLocationProvider _live;
+  late MapRenderingProvider _map;
+  late StopManagementProvider _stops;
+  late DirectionsProvider _directions;
+
+  LatLng? _lastRoutedFrom;
 
   @override
   void initState() {
     super.initState();
-    trackingProvider = context.read<TrackingProvider>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      trackingProvider.fetchCurrentLocation();
-      trackingProvider.fetchStops(routeId: widget.routeId);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _live = context.read<LiveLocationProvider>();
+      _map = context.read<MapRenderingProvider>();
+      _stops = context.read<StopManagementProvider>();
+      _directions = context.read<DirectionsProvider>();
+
+      await _stops.fetchStops(widget.routeId);
+
+      await _live.fetchInitialLocation();
+      final loc = _live.currentLocation;
+
+      if (loc != null) {
+        _map.moveTo(loc);
+        _map.updateBus(loc);
+        _drawRouteToNextStop();
+      }
+
+      _live.addListener(_onLocationChanged);
+      _live.startTracking();
     });
+  }
+
+  void _onLocationChanged() {
+    final loc = _live.currentLocation;
+    if (loc == null) return;
+
+    _map.updateBus(loc);
+
+    if (_shouldReroute(loc)) {
+      _drawRouteToNextStop();
+    }
+  }
+
+  bool _shouldReroute(LatLng current) {
+    if (_lastRoutedFrom == null) return true;
+
+    final distance = Geolocator.distanceBetween(
+      _lastRoutedFrom!.latitude,
+      _lastRoutedFrom!.longitude,
+      current.latitude,
+      current.longitude,
+    );
+
+    return distance > _rerouteThresholdMeters;
+  }
+
+  Future<void> _drawRouteToNextStop() async {
+    final from = _live.currentLocation;
+    final stop = _stops.nextStop;
+
+    if (from == null || stop == null) return;
+
+    final points = await _directions.fetchRoute(
+      from: from,
+      to: LatLng(stop.latitude, stop.longitude),
+    );
+
+    if (points.isNotEmpty) {
+      _map.updatePolyline(points);
+      _lastRoutedFrom = from;
+    }
+  }
+
+  @override
+  void dispose() {
+    _live.removeListener(_onLocationChanged);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<TrackingProvider>();
     return Scaffold(
-      appBar: AppBar(title: Text("Route In Progress"), centerTitle: true),
+      appBar: AppBar(title: const Text("Route In Progress"), centerTitle: true),
       body: Stack(
         children: [
-          GoogleMapView(provider: provider),
+          const GoogleMapView(),
+
           Positioned(
-            right: 3.wp,
-            top: 10.hp,
+            right: 16,
+            top: 80,
             child: GestureDetector(
               onTap: () {
                 showDialog(
                   context: context,
-                  builder: (_) => AddStopDialog(routeId: widget.routeId,),
+                  builder: (_) => AddStopDialog(routeId: widget.routeId),
                 );
               },
               child: Container(
@@ -58,16 +131,13 @@ class _TrackingScreenState extends State<TrackingScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                 ),
-
                 child: Row(
-                  children: [
+                  children: const [
                     Icon(Icons.add),
-                    2.w,
+                    SizedBox(width: 8),
                     Text(
                       "Add Stop",
-                      style: context.text.bodyLarge!.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -79,10 +149,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
             sheetController: _sheetController,
             minSize: _minSize,
             maxSize: _maxSize,
-            sortedStops: provider.sortedStops,
-            onArrived: () {
-              // provider.markArrivedAtStop();
-            },
           ),
         ],
       ),
