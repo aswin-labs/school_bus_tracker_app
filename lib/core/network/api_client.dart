@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:school_bus_tracker/core/network/api_config.dart';
 import 'package:school_bus_tracker/core/network/interceptors/auth_interceptor.dart';
 
-class ApiClient{
+class ApiClient {
   static final Dio _dio =
       Dio(
           BaseOptions(
-            baseUrl: ApiConfig.baseUrl,
+            baseUrl: ApiConfig.acadobsDevBaseUrl,
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 30),
             followRedirects: true,

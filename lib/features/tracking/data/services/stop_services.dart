@@ -10,7 +10,15 @@ class StopServices {
     return response;
   }
 
-   // POST adding stops
+  // GET stop details
+  Future<Response> fetchSingleStop({required int stopId}) async {
+    final response = await ApiClient.get(
+      "${ApiEndpoints.getStopDetails}/$stopId",
+    );
+    return response;
+  }
+
+  // POST adding stops
   Future<Response> sendStop({required StopModel stop}) async {
     final response = await ApiClient.post(ApiEndpoints.addStop, {
       "route_id": stop.routeId,

@@ -9,7 +9,7 @@ class AuthServices {
     required String password,
   }) async {
     return await ApiClient.post(ApiEndpoints.login, {
-      'email': username,
+      'identifier': username,
       'password': password,
     });
   }

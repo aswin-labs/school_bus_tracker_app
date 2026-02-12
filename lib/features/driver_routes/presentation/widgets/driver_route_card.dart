@@ -114,18 +114,21 @@ Widget _routeNameWidget({
       color: Color(0xFFE8E8E8),
       borderRadius: BorderRadius.circular(30),
     ),
-    child: Row(
-      children: [
-        Image.asset('assets/icons/home.png', width: 20),
-        3.w,
-        Icon(Icons.arrow_forward_rounded),
-        3.w,
-        Text(
-          routeName,
-          style: context.text.titleMedium,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          Image.asset('assets/icons/home.png', width: 20),
+          3.w,
+          Icon(Icons.arrow_forward_rounded),
+          3.w,
+          Text(
+            routeName,
+            style: context.text.titleMedium,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     ),
   );
 }

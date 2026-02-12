@@ -2,9 +2,17 @@ import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/theme_provider.dart';
 import 'package:school_bus_tracker/features/auth/presentation/provider/auth_provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/dummy/provider/sample_live_location_provider.dart';
+import 'package:school_bus_tracker/features/dummy/provider/sample_map_rendering_provider.dart';
+import 'package:school_bus_tracker/features/dummy/provider/sample_stop_management_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/student_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/tracking_provider.dart';
 
-getProviders(){
+getProviders() {
   return [
     // theme provider
     ChangeNotifierProvider(create: (_) => ThemeProvider()),
@@ -17,5 +25,23 @@ getProviders(){
 
     // tracking provider
     ChangeNotifierProvider(create: (_) => TrackingProvider()),
+
+    ChangeNotifierProvider(
+      create: (_) {
+        final provider = LiveLocationProvider();
+        provider.fetchInitialLocation();
+        return provider;
+      },
+    ),
+
+    ChangeNotifierProvider(create: (_) => StopManagementProvider()),
+    ChangeNotifierProvider(create: (_) => MapRenderingProvider()),
+    ChangeNotifierProvider(create: (_) => DirectionsProvider()),
+    ChangeNotifierProvider(create: (_) => StudentProvider()),
+
+    // ----------------DUMMY----------------------
+    ChangeNotifierProvider(create: (_) => SampleLiveLocationProvider()),
+    ChangeNotifierProvider(create: (_) => SampleStopManagementProvider()),
+    ChangeNotifierProvider(create: (_) => SampleMapRenderingProvider()),
   ];
 }

@@ -11,7 +11,6 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  
   void _setLoading(bool value) {
     if (_isLoading != value) {
       _isLoading = value;
@@ -36,7 +35,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        final token = data['accessToken'] as String?;
+        final token = data['token'] as String?;
 
         if (token == null) {
           return "Invalid server response";

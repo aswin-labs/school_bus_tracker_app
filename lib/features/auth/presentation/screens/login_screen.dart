@@ -86,6 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: authProvider.isLoading ? null : _handleLogin,
+                  // onPressed: (){
+                  //   if(_usernameController.text=="driver"&&_passwordController.text=="123456"){
+                  //     context.pushNamed(RouterConstants.driverHomeScreen);
+                  //   }
+                  // },
                   child: authProvider.isLoading
                       ? const SizedBox(
                           width: 24,
