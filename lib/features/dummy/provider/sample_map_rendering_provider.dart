@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
 
-class MapRenderingProvider extends ChangeNotifier {
+class SampleMapRenderingProvider extends ChangeNotifier {
   GoogleMapController? controller;
   BitmapDescriptor? busIcon;
 
@@ -62,15 +62,5 @@ class MapRenderingProvider extends ChangeNotifier {
 
   void moveTo(LatLng position, {double zoom = 17}) {
     controller?.animateCamera(CameraUpdate.newLatLngZoom(position, zoom));
-  }
-
-  void clearPolylines() {
-    polylines.clear();
-    notifyListeners();
-  }
-
-  void clearMarkers() {
-    markers.clear();
-    notifyListeners();
   }
 }

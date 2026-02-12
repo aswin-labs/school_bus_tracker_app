@@ -5,6 +5,7 @@ import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
 import 'package:school_bus_tracker/core/widgets/common_button.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -47,7 +48,7 @@ class TrackingBottomSheet extends StatelessWidget {
             children: [
               /// DRAG HANDLE
               Positioned(
-                top: 8,
+                top: 16,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -88,18 +89,35 @@ class TrackingBottomSheet extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            1.5.h,
+                            .5.h,
 
                             /// Directions button
                             Row(
                               children: [
+                                IconButton(
+                                  icon: Row(
+                                    children: [
+                                      Text(
+                                        "Students",
+                                        style: context.text.titleMedium!
+                                            .copyWith(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                      const Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                      ),
+                                    ],
+                                  ),
+                                  onPressed: () {},
+                                ),
+                                Spacer(),
                                 Text(
-                                  "Navigate",
+                                  "Directions",
                                   style: context.text.titleMedium!.copyWith(
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const Spacer(),
                                 IconButton(
                                   icon: const Icon(Icons.directions),
                                   onPressed: () {
@@ -112,7 +130,7 @@ class TrackingBottomSheet extends StatelessWidget {
                               ],
                             ),
 
-                            1.5.h,
+                            .5.h,
                             CommonButton(
                               title: "Arrived at Stop",
                               onTap: () {
@@ -129,8 +147,7 @@ class TrackingBottomSheet extends StatelessWidget {
                     /// UPCOMING STOPS
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                            left: 16, bottom: 16),
+                        padding: const EdgeInsets.only(left: 16, bottom: 8),
                         child: Text(
                           "Upcoming stops",
                           style: context.text.titleMedium!.copyWith(
@@ -140,21 +157,30 @@ class TrackingBottomSheet extends StatelessWidget {
                       ),
                     ),
                     SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final stop = stops[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: StopTile(
-                              stopName: stop.stopName,
-                              studentsCount: 12,
-                              time: "time",
-                            ),
-                          );
-                        },
-                        childCount: stops.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final stop = stops[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: StopTile(
+                            stopName: stop.stopName,
+                            studentsCount: stop.students?.length ?? 0,
+                            time: "time",
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return StopDetailsBottomsheet(
+                                    stopId: stop.id ?? 0,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      }, childCount: stops.length),
                     ),
+                    SliverPadding(padding: EdgeInsets.only(bottom: 16)),
                   ],
                 ),
               ),

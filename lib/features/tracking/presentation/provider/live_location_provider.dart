@@ -9,15 +9,56 @@ class LiveLocationProvider extends ChangeNotifier {
   final List<LatLng> path = [];
   StreamSubscription<Position>? _stream;
   bool trackingStarted = false;
+  bool isFetchingLocation = false;
 
   Future<void> fetchInitialLocation() async {
+    if (isFetchingLocation) return;
+
+    isFetchingLocation = true;
+    notifyListeners();
+
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      isFetchingLocation = false;
+      notifyListeners();
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      isFetchingLocation = false;
+      notifyListeners();
+      return;
+    }
+
     final pos = await Geolocator.getCurrentPosition();
+
     currentLocation = LatLng(pos.latitude, pos.longitude);
+
+    isFetchingLocation = false;
     notifyListeners();
   }
 
-  void startTracking() {
+  Future<void> startTracking() async {
     if (trackingStarted) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+
     trackingStarted = true;
 
     _stream =
@@ -45,5 +86,10 @@ class LiveLocationProvider extends ChangeNotifier {
   void dispose() {
     _stream?.cancel();
     super.dispose();
+  }
+
+  void clearCurrentLocation() {
+    currentLocation = null;
+    notifyListeners();
   }
 }

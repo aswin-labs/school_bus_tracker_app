@@ -22,7 +22,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
 
-  static const double _minSize = 0.3;
+  static const double _minSize = 0.4;
   static const double _maxSize = 0.65;
 
   static const double _rerouteThresholdMeters = 30;
@@ -33,31 +33,43 @@ class _TrackingScreenState extends State<TrackingScreen> {
   late DirectionsProvider _directions;
 
   LatLng? _lastRoutedFrom;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _live = context.read<LiveLocationProvider>();
-      _map = context.read<MapRenderingProvider>();
-      _stops = context.read<StopManagementProvider>();
-      _directions = context.read<DirectionsProvider>();
+    if (_initialized) return;
+    _initialized = true;
 
-      await _stops.fetchStops(widget.routeId);
+    _live = context.read<LiveLocationProvider>();
+    _map = context.read<MapRenderingProvider>();
+    _stops = context.read<StopManagementProvider>();
+    _directions = context.read<DirectionsProvider>();
 
-      await _live.fetchInitialLocation();
-      final loc = _live.currentLocation;
+    _initialize();
+  }
 
-      if (loc != null) {
-        _map.moveTo(loc);
-        _map.updateBus(loc);
-        _drawRouteToNextStop();
-      }
+  Future<void> _initialize() async {
+    /// RESET OLD STATE
+    _lastRoutedFrom = null;
+    _map.clearPolylines();
+    _map.clearMarkers();
+    _stops.reset();
 
-      _live.addListener(_onLocationChanged);
-      _live.startTracking();
-    });
+    await _stops.fetchStops(widget.routeId);
+
+    await _live.fetchInitialLocation();
+    final loc = _live.currentLocation;
+
+    if (loc != null) {
+      _map.moveTo(loc);
+      _map.updateBus(loc);
+      await _drawRouteToNextStop();
+    }
+
+    _live.addListener(_onLocationChanged);
+    await _live.startTracking();
   }
 
   void _onLocationChanged() {
@@ -104,6 +116,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
   @override
   void dispose() {
     _live.removeListener(_onLocationChanged);
+    _live.stopTracking(); // IMPORTANT
     super.dispose();
   }
 

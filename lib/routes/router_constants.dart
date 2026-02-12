@@ -1,4 +1,8 @@
 class RouterConstants {
+
+  // sample
+  static const String sampleMapScreen = 'sampleMapScreen';
+  // static const String sampleDriverScreen = 'sampleDriverScreen';
   // login
   static const String loginScreen = 'loginScreen';
 

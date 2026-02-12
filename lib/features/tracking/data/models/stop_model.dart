@@ -1,24 +1,27 @@
 import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
+import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
 
 class StopModel {
   int? id;
-  int routeId;
+  int? routeId;
   String stopName;
   int? priority;
   double latitude;
   double longitude;
-  bool? trash;
-  RouteModel? driverRoute;
+  String? routeName;
+  List<StudentModel>? students;
+  RouteModel? route;
 
   StopModel({
     this.id,
-    required this.routeId,
+    this.routeId,
     required this.stopName,
     this.priority,
     required this.latitude,
     required this.longitude,
-    this.trash,
-    this.driverRoute,
+    this.routeName,
+    this.students,
+    this.route,
   });
 
   factory StopModel.fromJson(Map<String, dynamic> json) => StopModel(
@@ -28,9 +31,12 @@ class StopModel {
     priority: json["priority"],
     latitude: json["latitude"],
     longitude: json["longitude"],
-    trash: json["trash"],
-    driverRoute: json["route"] == null
-        ? null
-        : RouteModel.fromJson(json["route"]),
+    routeName: json["route_name"],
+    students: json["students"] == null
+        ? []
+        : List<StudentModel>.from(
+            json["students"]!.map((x) => StudentModel.fromJson(x)),
+          ),
+    route: json["route"] == null ? null : RouteModel.fromJson(json["route"]),
   );
 }
