@@ -18,8 +18,10 @@ class RouteProvider extends ChangeNotifier {
     }
   }
 
+  bool _isLoadingTwo = false;
+  bool get isLoadingTwo => _isLoadingTwo;
+
   /// Fetch driver routes
-  /// Returns error message if fails, null if success
   Future<String?> fetchDriverRoutes() async {
     _setLoading(true);
     try {
@@ -39,7 +41,8 @@ class RouteProvider extends ChangeNotifier {
       }
 
       // Server returned an error
-      final errorMsg = response.data['message'] ??
+      final errorMsg =
+          response.data['message'] ??
           "Failed to fetch routes (status: ${response.statusCode})";
       return errorMsg;
     } catch (e) {
@@ -47,6 +50,29 @@ class RouteProvider extends ChangeNotifier {
       return "Something went wrong. Try again.";
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // activate route
+  Future<String?> activateRoute(int routeId) async {
+    _isLoadingTwo = true;
+    notifyListeners();
+    try {
+      final response = await RouteServices().activateRoute(routeId);
+      if (response.statusCode == 200) {
+        log("Route is live");
+        return null;
+      }
+      // Server returned an error
+      final errorMsg =
+          response.data['message'] ??
+          "Failed to fetch routes (status: ${response.statusCode})";
+      return errorMsg;
+    } catch (e) {
+      return "Something went wrong. Try again.";
+    } finally {
+      _isLoadingTwo = false;
+      notifyListeners();
     }
   }
 }

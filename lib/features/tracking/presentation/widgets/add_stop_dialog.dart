@@ -27,19 +27,25 @@ class _AddStopDialogState extends State<AddStopDialog> {
     super.initState();
 
     stopProvider = context.read<StopManagementProvider>();
+
+    final routes = context.read<RouteProvider>().driverRoutes;
+
+    if (routes.isNotEmpty) {
+      _selectedRoute = routes.firstWhere(
+        (r) => r.id == widget.routeId,
+        orElse: () => routes.first,
+      );
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LiveLocationProvider>().clearCurrentLocation();
-
-      stopProvider.clearSelectedLocation(); // reset every time dialog opens
+      stopProvider.clearSelectedLocation();
 
       final liveLocation = context.read<LiveLocationProvider>().currentLocation;
 
       if (liveLocation != null) {
         stopProvider.setSelectedLocation(liveLocation);
       }
-
-      final routes = context.read<RouteProvider>().driverRoutes;
-      _selectedRoute = routes.firstWhere((r) => r.id == widget.routeId);
     });
   }
 
@@ -231,7 +237,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
     final result = await context.read<StopManagementProvider>().addStop(
       stopName: _titleController.text.trim(),
       priority: int.parse(_priorityController.text),
-      routeId: _selectedRoute!.id!,
+      routeId: _selectedRoute!.id,
     );
 
     if (!mounted) return;

@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
 import 'package:school_bus_tracker/core/widgets/common_button.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
 
-class StopListManagementBottomsheet extends StatelessWidget {
-  const StopListManagementBottomsheet({super.key});
+class StopListManagementBottomsheet extends StatefulWidget {
+  final int routeId;
+  const StopListManagementBottomsheet({super.key, required this.routeId});
+
+  @override
+  State<StopListManagementBottomsheet> createState() =>
+      _StopListManagementBottomsheetState();
+}
+
+class _StopListManagementBottomsheetState
+    extends State<StopListManagementBottomsheet> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<StopManagementProvider>().fetchStops(widget.routeId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +68,19 @@ class StopListManagementBottomsheet extends StatelessWidget {
               ),
 
               /// ALL STOPS LIST
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return StopTile(
-                    stopName: "Stop $index",
-                    studentsCount: 10,
-                    time: "08:30 AM",
+              Consumer<StopManagementProvider>(
+                builder: (context, provider, _) {
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final stop = provider.stops[index];
+                      return StopTile(
+                        stopName: stop.stopName,
+                        studentsCount: stop.students?.length ?? 0,
+                        time: "08:30 AM",
+                      );
+                    }, childCount: provider.stops.length),
                   );
-                }, childCount: 6),
+                },
               ),
 
               /// PENDING TITLE

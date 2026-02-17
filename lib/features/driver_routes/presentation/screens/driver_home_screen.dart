@@ -5,6 +5,7 @@ import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
 import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/driver_route_card.dart';
+import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/start_journey_dialog.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -37,6 +38,24 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     }
   }
 
+  // activate route
+  Future<bool> _activateRoute(int routeId) async {
+    final provider = context.read<RouteProvider>();
+
+    final error = await provider.activateRoute(routeId);
+
+    if (!mounted) return false;
+
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return false;
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,10 +85,44 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     return DriverRouteCard(
                       routeName: route.routeName ?? "",
                       timeRange: "07:30 am - 08:30 am",
-                      onButtonTap: () => context.pushNamed(
-                        RouterConstants.trackingScreen,
-                        extra: route.id,
-                      ),
+                      isLive: route.active == true,
+                      onButtonTap: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) {
+                            bool isLoading = false;
+
+                            return StatefulBuilder(
+                              builder: (context, setStateDialog) {
+                                return StartJourneyDialog(
+                                  isLoading: isLoading,
+                                  onStart: () async {
+                                    setStateDialog(() => isLoading = true);
+
+                                    final success = await _activateRoute(
+                                      route.id,
+                                    );
+
+                                    if (!mounted) return;
+
+                                    if (success) {
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.pop(context);
+                                      this.context.pushNamed(
+                                        RouterConstants.trackingScreen,
+                                        extra: route.id,
+                                      );
+                                    } else {
+                                      setStateDialog(() => isLoading = false);
+                                    }
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
                     );
                   }, childCount: provider.driverRoutes.length),
                 );

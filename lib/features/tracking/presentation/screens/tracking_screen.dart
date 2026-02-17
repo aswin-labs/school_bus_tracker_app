@@ -6,8 +6,8 @@ import 'package:school_bus_tracker/features/tracking/presentation/provider/direc
 import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/google_map_view.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_list_management_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/tracking_bottom_sheet.dart';
 
 class TrackingScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
 
-  static const double _minSize = 0.4;
+  static const double _minSize = 0.35;
   static const double _maxSize = 0.65;
 
   static const double _rerouteThresholdMeters = 30;
@@ -133,9 +133,14 @@ class _TrackingScreenState extends State<TrackingScreen> {
             top: 80,
             child: GestureDetector(
               onTap: () {
-                showDialog(
+                showModalBottomSheet(
                   context: context,
-                  builder: (_) => AddStopDialog(routeId: widget.routeId),
+                  isScrollControlled: true,
+                  builder: (context) {
+                    return StopListManagementBottomsheet(
+                      routeId: widget.routeId,
+                    );
+                  },
                 );
               },
               child: Container(

@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:school_bus_tracker/features/auth/presentation/screens/login_screen.dart';
 import 'package:school_bus_tracker/features/auth/presentation/screens/splash_screen.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/screens/driver_home_screen.dart';
-import 'package:school_bus_tracker/features/dummy/screens/sample_map_screen.dart';
 import 'package:school_bus_tracker/features/settings/presentation/screens/settings_screen.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
@@ -10,16 +9,9 @@ import 'package:school_bus_tracker/routes/router_constants.dart';
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    // sample
-    GoRoute(path: '/', builder: (context, state) => SplashScreen()),
-    GoRoute(
-      path: '/sampleMapScreen',
-      name: RouterConstants.sampleMapScreen,
-      builder: (context, state) => SampleMapScreen(),
-    ),
 
     // splash
-    // GoRoute(path: '/', builder: (context, state) => SplashScreen()),
+    GoRoute(path: '/', builder: (context, state) => SplashScreen()),
 
     // login
     GoRoute(
