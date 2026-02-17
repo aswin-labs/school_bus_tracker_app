@@ -7,4 +7,11 @@ class RouteServices {
   Future<Response> fetchDriverRoutes() async {
     return await ApiClient.get(ApiEndpoints.routes);
   }
+
+  // POST driver route active
+  Future<Response> activateRoute(int routeId) async {
+    return await ApiClient.post(ApiEndpoints.activateRoute, {
+      "route_id": routeId,
+    });
+  }
 }

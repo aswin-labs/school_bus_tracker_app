@@ -5,6 +5,9 @@ class ApiEndpoints {
   // routes
   static const routes = "/driver/getDriverAssignedRoutes";
 
+  // activate route
+  static const activateRoute = "/driver/updateRouteActive";
+
   // add stop
   static const addStop = "/driver/createStopForDriver";
 
