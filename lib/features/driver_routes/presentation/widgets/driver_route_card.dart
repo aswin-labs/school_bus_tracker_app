@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 
 class DriverRouteCard extends StatelessWidget {
   final String routeName;
@@ -33,16 +34,16 @@ class DriverRouteCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: isLive ? 12 : 8),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.theme.cardColor,
           borderRadius: BorderRadius.circular(isLive ? 20 : 16),
           border: Border.all(
-            color: accentColor.withAlpha(isLive ? 80 : 50),
+            color: Color(0xFF3B82F6).withAlpha(isLive ? 80 : 50),
             width: isLive ? 2 : 1,
           ),
           boxShadow: isLive
               ? [
                   BoxShadow(
-                    color: accentColor.withAlpha(25),
+                    color: Color.fromARGB(255, 188, 211, 248).withAlpha(10),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                     spreadRadius: 0,
@@ -75,8 +76,8 @@ class DriverRouteCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    accentColor.withAlpha(isLive ? 30 : 15),
-                    accentColor.withAlpha(isLive ? 15 : 8),
+                    Color(0xFF3B82F6).withAlpha(isLive ? 30 : 15),
+                    Color(0xFF3B82F6).withAlpha(isLive ? 15 : 8),
                   ],
                 ),
                 borderRadius: BorderRadius.only(
@@ -108,7 +109,7 @@ class DriverRouteCard extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: accentColor,
+                        color: Color(0xFF3B82F6),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -181,8 +182,8 @@ class DriverRouteCard extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              accentColor.withAlpha(40),
-                              accentColor.withAlpha(20),
+                              Color(0xFF2563EB).withAlpha(40),
+                              Color(0xFF2563EB).withAlpha(20),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(14),
@@ -190,7 +191,7 @@ class DriverRouteCard extends StatelessWidget {
                         child: Icon(
                           Icons.route_rounded,
                           size: isLive ? 22 : 20,
-                          color: accentColor,
+                          color: Color(0xFF2563EB),
                         ),
                       ),
                       SizedBox(width: isLive ? 12 : 10),
@@ -201,10 +202,9 @@ class DriverRouteCard extends StatelessWidget {
                           children: [
                             Text(
                               'Route',
-                              style: TextStyle(
-                                fontSize: isLive ? 10.5 : 10,
+                              style: context.text.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
+                                color: context.theme.dividerColor,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -214,24 +214,19 @@ class DriverRouteCard extends StatelessWidget {
                                 Icon(
                                   Icons.home_rounded,
                                   size: isLive ? 15 : 14,
-                                  color: Colors.grey[700],
+                                  color: context.theme.dividerColor,
                                 ),
                                 SizedBox(width: isLive ? 6 : 5),
                                 Icon(
                                   Icons.arrow_forward,
                                   size: isLive ? 13 : 12,
-                                  color: Colors.grey[500],
+                                  color: context.theme.dividerColor,
                                 ),
                                 SizedBox(width: isLive ? 6 : 5),
                                 Expanded(
                                   child: Text(
                                     routeName,
-                                    style: TextStyle(
-                                      fontSize: isLive ? 14.5 : 13.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[900],
-                                      letterSpacing: 0.2,
-                                    ),
+                                    style: context.text.bodyMedium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -254,10 +249,10 @@ class DriverRouteCard extends StatelessWidget {
                           vertical: isLive ? 8 : 6,
                         ),
                         decoration: BoxDecoration(
-                          color: accentColor.withAlpha(20),
+                          color: Color(0xFF3B82F6).withAlpha(20),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: accentColor.withAlpha(40),
+                            color: Color(0xFF3B82F6).withAlpha(40),
                             width: 1,
                           ),
                         ),
@@ -267,7 +262,7 @@ class DriverRouteCard extends StatelessWidget {
                             Icon(
                               Icons.schedule_rounded,
                               size: isLive ? 15 : 14,
-                              color: accentColor,
+                              color: Color(0xFF2563EB),
                             ),
                             SizedBox(width: isLive ? 8 : 6),
                             Text(
@@ -275,7 +270,7 @@ class DriverRouteCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: isLive ? 12.5 : 11.5,
                                 fontWeight: FontWeight.w600,
-                                color: accentColor,
+                                color: Color(0xFF2563EB),
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -293,7 +288,7 @@ class DriverRouteCard extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onButtonTap,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: accentColor,
+                          backgroundColor: Color(0xFF3B82F6),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 13),
