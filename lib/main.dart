@@ -7,12 +7,7 @@ import 'package:school_bus_tracker/core/utils/providers.dart';
 import 'package:school_bus_tracker/routes/router_config.dart';
 
 void main() {
-  runApp(
-    MultiProvider(
-      providers: getProviders(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(MultiProvider(providers: getProviders(), child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
