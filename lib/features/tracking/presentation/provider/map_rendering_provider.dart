@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
@@ -6,19 +9,31 @@ class MapRenderingProvider extends ChangeNotifier {
   GoogleMapController? controller;
   BitmapDescriptor? busIcon;
 
+  final Completer<void> _readyCompleter = Completer<void>();
+  Future<void> get ready => _readyCompleter.future;
+
   final Set<Marker> markers = {};
   final Set<Polyline> polylines = {};
 
   Future<void> init(GoogleMapController c) async {
     controller = c;
+
     busIcon ??= await BitmapDescriptor.asset(
       const ImageConfiguration(size: Size(48, 48), devicePixelRatio: 3),
       'assets/icons/bus.png',
     );
+
+    if (!_readyCompleter.isCompleted) {
+      _readyCompleter.complete();
+    }
   }
 
-  void updateBus(LatLng position) {
+  Future<void> updateBus(LatLng position) async {
+    await ready;
+    log("busIcon is null? ${busIcon == null}");
+    log("controller is null? ${controller == null}");
     markers.removeWhere((m) => m.markerId.value == 'bus');
+
     markers.add(
       Marker(
         markerId: const MarkerId('bus'),
@@ -28,6 +43,7 @@ class MapRenderingProvider extends ChangeNotifier {
         flat: true,
       ),
     );
+
     notifyListeners();
   }
 
@@ -60,8 +76,9 @@ class MapRenderingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void moveTo(LatLng position, {double zoom = 17}) {
-    controller?.animateCamera(CameraUpdate.newLatLngZoom(position, zoom));
+  Future<void> moveTo(LatLng position, {double zoom = 17}) async {
+    await ready;
+    await controller?.animateCamera(CameraUpdate.newLatLngZoom(position, zoom));
   }
 
   void clearPolylines() {

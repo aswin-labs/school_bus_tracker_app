@@ -2,8 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 
-class StudentsInStopDialog extends StatelessWidget {
-  const StudentsInStopDialog({super.key});
+class StudentsInStopDialog extends StatefulWidget {
+  final int stopId;
+  const StudentsInStopDialog({super.key, required this.stopId});
+
+  @override
+  State<StudentsInStopDialog> createState() => _StudentsInStopDialogState();
+}
+
+class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<StopManagementProvider>().fetchSingleStop(widget.stopId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +43,14 @@ class StudentsInStopDialog extends StatelessWidget {
             // ── HEADER ──────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 12, 14),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF00D9A3), Color(0xFF0EA5E9)],
+                  colors: [
+                    Color(0xFF3B82F6).withAlpha(255),
+                    Color(0xFF2563EB).withAlpha(255),
+                  ],
                 ),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(24),
@@ -119,14 +136,14 @@ class StudentsInStopDialog extends StatelessWidget {
                     width: 3,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00D9A3),
+                      color: const Color(0xFF3B82F6).withAlpha(12),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Consumer<StopManagementProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.nextStop?.students?.length ?? 0;
+                      final count = provider.singleStop?.students?.length ?? 0;
                       return Text(
                         '$count Student${count != 1 ? 's' : ''}',
                         style: const TextStyle(
@@ -142,7 +159,7 @@ class StudentsInStopDialog extends StatelessWidget {
                   // Indigo count pill
                   Consumer<StopManagementProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.nextStop?.students?.length ?? 0;
+                      final count = provider.singleStop?.students?.length ?? 0;
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -198,7 +215,14 @@ class StudentsInStopDialog extends StatelessWidget {
               constraints: const BoxConstraints(maxHeight: 280),
               child: Consumer<StopManagementProvider>(
                 builder: (context, provider, _) {
-                  final students = provider.nextStop?.students ?? [];
+                  final students = provider.singleStop?.students ?? [];
+                  if (provider.isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF3B82F6),
+                      ),
+                    );
+                  }
 
                   if (students.isEmpty) {
                     return Padding(
@@ -371,13 +395,16 @@ class StudentsInStopDialog extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
+                    backgroundColor: Color(0xFF3B82F6),
                     foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    // side: const BorderSide(
+                    //   color: Color(0xFF3B82F6),
+                    //   width: 1.5,
+                    // ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
                   ),
                   child: const Text(
                     'Done',

@@ -9,6 +9,9 @@ class StopModel {
   double latitude;
   double longitude;
   String? routeName;
+  String? routeType;
+  bool? arrived;
+  DateTime? arrivedTime;
   List<StudentModel>? students;
   RouteModel? route;
 
@@ -17,9 +20,12 @@ class StopModel {
     this.routeId,
     required this.stopName,
     this.priority,
+    this.routeType,
     required this.latitude,
     required this.longitude,
     this.routeName,
+    this.arrived,
+    this.arrivedTime,
     this.students,
     this.route,
   });
@@ -32,6 +38,11 @@ class StopModel {
     latitude: json["latitude"],
     longitude: json["longitude"],
     routeName: json["route_name"],
+    routeType: json["route_type"],
+    arrived: json['arrived'],
+    arrivedTime: json["arrived_time"] == null
+        ? null
+        : DateTime.parse(json["arrived_time"]),
     students: json["students"] == null
         ? []
         : List<StudentModel>.from(

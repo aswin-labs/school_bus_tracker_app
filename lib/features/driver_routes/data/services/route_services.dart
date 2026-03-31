@@ -14,4 +14,11 @@ class RouteServices {
       "route_id": routeId,
     });
   }
+
+  // POST complete route
+   Future<Response> completeRoute(int routeId) async {
+    return await ApiClient.post(ApiEndpoints.completeRoute, {
+      "route_id": routeId,
+    });
+  }
 }

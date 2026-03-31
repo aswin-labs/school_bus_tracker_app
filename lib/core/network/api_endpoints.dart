@@ -8,8 +8,14 @@ class ApiEndpoints {
   // activate route
   static const activateRoute = "/driver/updateRouteActive";
 
-  // add stop
+  // complete route
+  static const completeRoute = "/driver/routeInactive";
+
+  // add single stop
   static const addStop = "/driver/createStopForDriver";
+
+  // add bulk stops
+  static const addBulkStops = "/driver/bulkStopCreation";
 
   // get stop
   static const getStops = "/driver/getStopsForDriver";
@@ -22,4 +28,10 @@ class ApiEndpoints {
 
   // add students to stop
   static const addStudentsToStop = "/driver/assignStudentToStop";
+
+  // update stop and student
+  static const updateStopAndStudent = "/driver/updateStopAndStudent";
+
+  // route inactive
+  static const updateRouteInactive = "/driver/routeInactive";
 }

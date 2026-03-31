@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -15,17 +17,45 @@ class SelectLocationMapScreen extends StatefulWidget {
 class _SelectLocationMapScreenState extends State<SelectLocationMapScreen> {
   GoogleMapController? mapController;
 
+  bool _listenerAttached = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_listenerAttached) return;
+    _listenerAttached = true;
+
+    final live = context.read<LiveLocationProvider>();
+    final stop = context.read<StopManagementProvider>();
+
+    live.addListener(() async {
+      final loc = live.currentLocation;
+      log("Location received: $loc");
+      if (loc == null) return;
+
+      // Set selected location once
+      if (stop.selectedLocation == null) {
+        stop.setSelectedLocation(loc);
+      }
+
+      // Move camera
+      if (mapController != null) {
+        await mapController!.animateCamera(CameraUpdate.newLatLngZoom(loc, 17));
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
 
-    final stopProvider = context.read<StopManagementProvider>();
-    final liveLocation = context.read<LiveLocationProvider>().currentLocation;
+    Future.microtask(() async {
+      final live = context.read<LiveLocationProvider>();
 
-    /// Initialize map with live location if nothing selected yet
-    if (stopProvider.selectedLocation == null && liveLocation != null) {
-      stopProvider.setSelectedLocation(liveLocation);
-    }
+      if (live.currentLocation == null) {
+        await live.fetchInitialLocation();
+      }
+    });
   }
 
   @override

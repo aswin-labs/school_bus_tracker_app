@@ -6,6 +6,9 @@ class RouteModel {
     bool? active;
     DateTime? activatedAt;
     int? totalStudents;
+    bool isLock;
+    int? pickupId;
+    int? totalStops;
 
     RouteModel({
         required this.id,
@@ -15,6 +18,9 @@ class RouteModel {
         this.active,
         this.activatedAt,
         this.totalStudents,
+        required this.isLock,
+        this.pickupId,
+        this.totalStops
     });
 
     factory RouteModel.fromJson(Map<String, dynamic> json) => RouteModel(
@@ -25,5 +31,8 @@ class RouteModel {
         active: json["active"],
         activatedAt: json["activated_at"] == null ? null : DateTime.parse(json["activated_at"]),
         totalStudents: json["total_students"],
+        isLock: json["isLock"],
+        pickupId: json["pickId"],
+        totalStops: json["total_stops"]
     );
 }

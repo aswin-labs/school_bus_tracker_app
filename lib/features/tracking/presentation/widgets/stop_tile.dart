@@ -21,10 +21,10 @@ class StopTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = isActive
-        ? const Color(0xFF00D9A3)
+        ? const Color(0xFF3B82F6)
         : isCompleted
         ? const Color(0xFF94A3B8)
-        : const Color(0xFF6366F1);
+        : const Color(0xFF3B82F6);
 
     return Padding(
       padding: EdgeInsets.only(bottom: isActive ? 10 : 8),
@@ -174,11 +174,11 @@ class StopTile extends StatelessWidget {
                                   vertical: isActive ? 4 : 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF6366F1).withAlpha(15),
+                                  color: const Color(0xFF3B82F6).withAlpha(15),
                                   borderRadius: BorderRadius.circular(7),
                                   border: Border.all(
                                     color: const Color(
-                                      0xFF6366F1,
+                                      0xFF3B82F6,
                                     ).withAlpha(35),
                                     width: 1,
                                   ),
@@ -189,7 +189,7 @@ class StopTile extends StatelessWidget {
                                     Icon(
                                       Icons.people_alt_rounded,
                                       size: isActive ? 12 : 11,
-                                      color: const Color(0xFF6366F1),
+                                      color: const Color(0xFF3B82F6),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -197,7 +197,7 @@ class StopTile extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: isActive ? 11.5 : 10.5,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF6366F1),
+                                        color: const Color(0xFF3B82F6),
                                       ),
                                     ),
                                   ],

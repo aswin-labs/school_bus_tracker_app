@@ -3,9 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
+import 'package:school_bus_tracker/core/utils/custom_snackbar.dart';
+import 'package:school_bus_tracker/core/utils/date_time_helpers.dart';
 import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
+import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/driver_route_card.dart';
+import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/drop_stop_preview_dialog.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/start_journey_dialog.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
@@ -25,30 +29,24 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     });
   }
 
+  // load routes for listing
   Future<void> _loadRoutes() async {
     final provider = context.read<RouteProvider>();
     final error = await provider.fetchDriverRoutes();
 
-    if (!mounted) return;
+    if (!mounted || error == null) return;
 
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 20),
-              const SizedBox(width: 12),
-              Expanded(child: Text(error)),
-            ],
-          ),
-          backgroundColor: const Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-    }
+    _showError(error);
   }
 
+  // sorted routes
+  List<RouteModel> _getSortedRoutes(List<RouteModel> routes) {
+    return [...routes]..sort(
+      (a, b) => (b.active == true ? 1 : 0).compareTo(a.active == true ? 1 : 0),
+    );
+  }
+
+  // activate route
   Future<bool> _activateRoute(int routeId) async {
     final provider = context.read<RouteProvider>();
     final error = await provider.activateRoute(routeId);
@@ -56,51 +54,101 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     if (!mounted) return false;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 20),
-              const SizedBox(width: 12),
-              Expanded(child: Text(error)),
-            ],
-          ),
-          backgroundColor: const Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      _showError(error);
       return false;
     }
 
     return true;
   }
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+  // show error snackbar
+  void _showError(String error) {
+    CustomSnackbar.show(context, message: error, type: SnackbarType.error);
   }
 
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${days[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+  // handle route
+  Future<void> _handleRouteTap(RouteModel route) async {
+    final hasActiveRoute = context.read<RouteProvider>().driverRoutes.any(
+      (r) => r.active == true,
+    );
+
+    final isLive = route.active == true;
+    final isPickup = route.type == 'PICKUP';
+    final hasStops = (route.totalStops ?? 0) > 0;
+
+    if (hasActiveRoute && !isLive) {
+      _showError("Another route is already active");
+      return;
+    }
+
+    // 1. If already active → go tracking
+    if (isLive) {
+      context.goNamed(RouterConstants.trackingScreen, extra: route.id);
+      return;
+    }
+
+    // 2. No active route
+    if (!hasActiveRoute) {
+      if (isPickup) {
+        _showStartDialog(route);
+        return;
+      }
+
+      // Drop route
+      if (!hasStops) {
+        _showDropPreview(route);
+      } else {
+        _showStartDialog(route);
+      }
+    }
+  }
+
+  // show start journey dialog
+  void _showStartDialog(RouteModel route) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return StartJourneyDialog(
+              isLoading: isLoading,
+              onStart: () async {
+                setStateDialog(() => isLoading = true);
+
+                final success = await _activateRoute(route.id);
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  Navigator.of(context).pop(); // ✅ close dialog first
+
+                  context.goNamed(
+                    RouterConstants.trackingScreen,
+                    extra: route.id,
+                  );
+                } else {
+                  setStateDialog(() => isLoading = false);
+                }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // show drop preview dialog
+  void _showDropPreview(RouteModel route) {
+    showDialog(
+      context: context,
+      builder: (_) => DropStopsPreviewDialog(
+        pickupRouteId: route.pickupId ?? 0,
+        dropRouteId: route.id,
+      ),
+    );
   }
 
   @override
@@ -131,10 +179,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_getGreeting(), style: context.text.titleLarge),
+                  Text(getDayGreeting(), style: context.text.titleLarge),
                   const SizedBox(height: 2),
                   Text(
-                    _getCurrentDate(),
+                    getCurrentDate(),
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[600],
@@ -257,51 +305,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     else
                       SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final route = provider.driverRoutes[index];
+                          final routes = _getSortedRoutes(
+                            provider.driverRoutes,
+                          );
+                          final route = routes[index];
+
+                          final isPickup = route.type == 'PICKUP';
+                          final isLive = route.active == true;
+
                           return DriverRouteCard(
                             routeName: route.routeName ?? "Unknown Route",
-                            timeRange: "07:30 am - 08:30 am",
-                            isLive: route.active == true,
-                            onButtonTap: () {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) {
-                                  bool isLoading = false;
-
-                                  return StatefulBuilder(
-                                    builder: (context, setStateDialog) {
-                                      return StartJourneyDialog(
-                                        isLoading: isLoading,
-                                        onStart: () async {
-                                          setStateDialog(
-                                            () => isLoading = true,
-                                          );
-
-                                          final success = await _activateRoute(
-                                            route.id,
-                                          );
-
-                                          if (!context.mounted) return;
-
-                                          if (success) {
-                                            Navigator.pop(context);
-                                            context.pushNamed(
-                                              RouterConstants.trackingScreen,
-                                              extra: route.id,
-                                            );
-                                          } else {
-                                            setStateDialog(
-                                              () => isLoading = false,
-                                            );
-                                          }
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
+                            timeRange: route.activatedAt == null
+                                ? "8.30 AM"
+                                : formatTime(route.activatedAt.toString()),
+                            studentsCount: route.totalStudents ?? 0,
+                            isLive: isLive,
+                            isPickup: isPickup,
+                            onButtonTap: () => _handleRouteTap(route),
                           );
                         }, childCount: provider.driverRoutes.length),
                       ),

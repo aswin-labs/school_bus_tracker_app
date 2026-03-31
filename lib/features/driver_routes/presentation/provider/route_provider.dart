@@ -75,4 +75,27 @@ class RouteProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+    // complete route
+  Future<String?> completeRoute(int routeId) async {
+    _isLoadingTwo = true;
+    notifyListeners();
+    try {
+      final response = await RouteServices().completeRoute(routeId);
+      if (response.statusCode == 200) {
+        log("Route is complete");
+        return null;
+      }
+      // Server returned an error
+      final errorMsg =
+          response.data['message'] ??
+          "Failed to fetch routes (status: ${response.statusCode})";
+      return errorMsg;
+    } catch (e) {
+      return "Something went wrong. Try again.";
+    } finally {
+      _isLoadingTwo = false;
+      notifyListeners();
+    }
+  }
 }

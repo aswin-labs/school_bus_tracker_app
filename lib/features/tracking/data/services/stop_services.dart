@@ -18,14 +18,60 @@ class StopServices {
     return response;
   }
 
-  // POST adding stops
-  Future<Response> sendStop({required StopModel stop}) async {
+  // POST creating single stop
+  Future<Response> createStop({required StopModel stop}) async {
     final response = await ApiClient.post(ApiEndpoints.addStop, {
       "route_id": stop.routeId,
       "stop_name": stop.stopName,
       "priority": stop.priority,
       "latitude": stop.latitude,
       "longitude": stop.longitude,
+    });
+    return response;
+  }
+
+  // POST creating bulk stops
+  Future<Response> createBulkStops({
+    required int routeId,
+    required List<StopModel> stops,
+  }) async {
+    final response = await ApiClient.post(ApiEndpoints.addBulkStops, {
+      "route_id": routeId,
+      "stops": stops
+          .map(
+            (stop) => {
+              "stop_name": stop.stopName,
+              "priority": stop.priority,
+              "latitude": stop.latitude,
+              "longitude": stop.longitude,
+            },
+          )
+          .toList(),
+    });
+    return response;
+  }
+
+  // POST update stop and student
+  Future<Response> updateStopAndStudent({
+    required List<int> studentIds,
+    required int stopId,
+    // required String studentStatus,
+  }) async {
+    final response = await ApiClient.put(ApiEndpoints.updateStopAndStudent, {
+      "stop_id": stopId,
+      "student_ids": studentIds,
+      // "student_status": studentStatus,
+    });
+    return response;
+  }
+
+  // POST update route Inactive
+  Future<Response> updateRouteInActive({
+    required int routeId,
+    // required String studentStatus,
+  }) async {
+    final response = await ApiClient.post(ApiEndpoints.updateRouteInactive, {
+      "route_id": routeId,
     });
     return response;
   }

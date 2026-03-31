@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/extensions/context_extensions.dart';
-import '../../core/extensions/size_extensions.dart';
 
 class CommonButton extends StatelessWidget {
   final String title;
@@ -25,19 +24,19 @@ class CommonButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color fgColor =
-        contentColor ?? context.colors.onSurface;
+    final Color fgColor = contentColor ?? context.colors.onSurface;
 
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              backgroundColor ?? const Color.fromARGB(255, 88, 225, 133),
+          backgroundColor: Color(0xFF3B82F6),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 13),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius ?? 12),
+            borderRadius: BorderRadius.circular(12),
           ),
-          padding: EdgeInsets.symmetric(vertical: 1.5.hp),
         ),
         onPressed: isLoading ? null : onTap,
         child: AnimatedSwitcher(
@@ -57,14 +56,15 @@ class CommonButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: fgColor, size: 28),
+                      Icon(icon, color: fgColor, size: 22),
                       const SizedBox(width: 8),
                     ],
                     Text(
                       title,
-                      style: context.text.bodyLarge?.copyWith(
-                        color: fgColor,
-                        fontWeight: FontWeight.bold,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],

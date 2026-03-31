@@ -1,15 +1,22 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/arrived_student_dialog.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/next_stop_card.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/students_in_stop_dialog.dart';
+import 'package:school_bus_tracker/routes/router_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TrackingBottomSheet extends StatelessWidget {
   const TrackingBottomSheet({
     super.key,
+    // required this.isPickup
     required this.sheetController,
     required this.minSize,
     required this.maxSize,
@@ -22,7 +29,9 @@ class TrackingBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stopProvider = context.watch<StopManagementProvider>();
-    final stops = stopProvider.stops;
+    final allStops = stopProvider.stops;
+
+    final stops = allStops.where((s) => s.arrived != true).toList();
     final nextStop = stopProvider.nextStop;
 
     return DraggableScrollableSheet(
@@ -33,7 +42,9 @@ class TrackingBottomSheet extends StatelessWidget {
       snap: true,
       snapSizes: [minSize, maxSize],
       builder: (context, scrollController) {
-        if (stops.isEmpty || nextStop == null) {
+        final allStops = stopProvider.stops;
+
+        if (allStops.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -76,334 +87,52 @@ class TrackingBottomSheet extends StatelessWidget {
                   physics: const ClampingScrollPhysics(),
                   slivers: [
                     /// NEXT STOP CARD
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color(0xFF00D9A3).withAlpha(80),
-                              width: 2,
+                    if (nextStop != null)
+                      SliverToBoxAdapter(
+                        child: NextStopCard(
+                          stopName: nextStop.stopName,
+                          stopId: nextStop.id,
+                          isPickup: nextStop.routeType == "PICKUP",
+                          onStudentsTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => StudentsInStopDialog(
+                                stopId: nextStop.id ?? 0,
+                              ),
+                            );
+                          },
+                          onDirectionsTap: () {
+                            final url = context
+                                .read<DirectionsProvider>()
+                                .buildGoogleMapsUrl(nextStop);
+                            launchUrl(Uri.parse(url));
+                          },
+                          onArrivedTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => ArrivedStudentDialog(
+                                stopId: nextStop.id ?? 0,
+                                forPicking: nextStop.routeType == "PICKUP",
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    if (nextStop == null)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Center(
+                            child: Text(
+                              "All stops completed 🎉",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00D9A3).withAlpha(25),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withAlpha(6),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Active header strip
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      const Color(0xFF00D9A3).withAlpha(30),
-                                      const Color(0xFF00D9A3).withAlpha(12),
-                                    ],
-                                  ),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(18),
-                                    topRight: Radius.circular(18),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF00D9A3),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(
-                                              0xFF00D9A3,
-                                            ).withAlpha(120),
-                                            blurRadius: 6,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 7),
-                                    Text(
-                                      'NEXT STOP',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF00D9A3),
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Stop info
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  14,
-                                  16,
-                                  14,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Stop name row
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 46,
-                                          height: 46,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: [
-                                                const Color(
-                                                  0xFF00D9A3,
-                                                ).withAlpha(40),
-                                                const Color(
-                                                  0xFF00D9A3,
-                                                ).withAlpha(20),
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.location_on_rounded,
-                                            size: 22,
-                                            color: Color(0xFF00D9A3),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Stop Name',
-                                                style: TextStyle(
-                                                  fontSize: 10.5,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.grey[500],
-                                                  letterSpacing: 0.4,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                nextStop.stopName,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF0F172A),
-                                                  letterSpacing: 0.1,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 14),
-
-                                    // Action row: Students + Directions
-                                    Row(
-                                      children: [
-                                        // Students button
-                                        GestureDetector(
-                                          onTap: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (_) =>
-                                                  StudentsInStopDialog(),
-                                            );
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFF6366F1,
-                                              ).withAlpha(15),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: const Color(
-                                                  0xFF6366F1,
-                                                ).withAlpha(40),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.people_alt_rounded,
-                                                  size: 15,
-                                                  color: const Color(
-                                                    0xFF6366F1,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  'Students',
-                                                  style: const TextStyle(
-                                                    fontSize: 12.5,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF6366F1),
-                                                    letterSpacing: 0.2,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Icon(
-                                                  Icons
-                                                      .arrow_forward_ios_rounded,
-                                                  size: 11,
-                                                  color: const Color(
-                                                    0xFF6366F1,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-                                        const Spacer(),
-
-                                        // Directions button
-                                        GestureDetector(
-                                          onTap: () {
-                                            final url = context
-                                                .read<DirectionsProvider>()
-                                                .buildGoogleMapsUrl(nextStop);
-                                            launchUrl(Uri.parse(url));
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFF0EA5E9,
-                                              ).withAlpha(15),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: const Color(
-                                                  0xFF0EA5E9,
-                                                ).withAlpha(40),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.directions_rounded,
-                                                  size: 15,
-                                                  color: const Color(
-                                                    0xFF0EA5E9,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                const Text(
-                                                  'Directions',
-                                                  style: TextStyle(
-                                                    fontSize: 12.5,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF0EA5E9),
-                                                    letterSpacing: 0.2,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 14),
-
-                                    // Arrived button
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          // context
-                                          //     .read<StopManagementProvider>()
-                                          //     .completeCurrentStop();
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFF00D9A3,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 13,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: const [
-                                            Icon(
-                                              Icons
-                                                  .check_circle_outline_rounded,
-                                              size: 18,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Arrived at Stop',
-                                              style: TextStyle(
-                                                fontSize: 13.5,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.4,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ),
-                    ),
 
                     /// UPCOMING STOPS HEADER
                     SliverToBoxAdapter(
@@ -415,17 +144,17 @@ class TrackingBottomSheet extends StatelessWidget {
                               width: 3,
                               height: 16,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1),
+                                color: const Color(0xFF3B82F6),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
+                            const Text(
                               'Upcoming Stops',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F172A),
+                                color: Color(0xFF0F172A),
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -436,7 +165,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1).withAlpha(15),
+                                color: const Color(0xFF3B82F6).withAlpha(15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -444,7 +173,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF6366F1),
+                                  color: Color(0xFF3B82F6),
                                 ),
                               ),
                             ),
@@ -477,7 +206,68 @@ class TrackingBottomSheet extends StatelessWidget {
                       }, childCount: stops.length),
                     ),
 
-                    const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        child: Builder(
+                          builder: (context) {
+                            final isRouteCompleted =
+                                allStops.isNotEmpty &&
+                                allStops.every((s) => s.arrived == true);
+
+                            return SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: isRouteCompleted
+                                    ? () async {
+                                        final routeId = context
+                                            .read<StopManagementProvider>()
+                                            .currentRouteId;
+                                        log(routeId.toString());
+
+                                        if (routeId == null) return;
+
+                                        await context
+                                            .read<StopManagementProvider>()
+                                            .updateRouteInActive(
+                                              routeId: routeId,
+                                            );
+
+                                        if (context.mounted) {
+                                          context.pushNamed(
+                                            RouterConstants.driverHomeScreen,
+                                          );
+                                        }
+                                      }
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  backgroundColor: isRouteCompleted
+                                      ? const Color(0xFF16A34A)
+                                      : Colors.grey.shade300,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  isRouteCompleted
+                                      ? "Complete Route"
+                                      : "Complete all stops to finish",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: isRouteCompleted
+                                        ? Colors.white
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
