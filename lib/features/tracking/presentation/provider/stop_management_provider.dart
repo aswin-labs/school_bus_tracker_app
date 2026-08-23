@@ -94,8 +94,10 @@ class StopManagementProvider extends ChangeNotifier {
 
     try {
       final response = await StopServices().fetchStops(routeId: routeId);
+      log("fetchStops response: ${response.data}");
 
       if (response.statusCode == 200) {
+        log("fetchStops response: ${response.data}");
         final List<dynamic> dataList = response.data['data'] ?? [];
 
         _stops = dataList.map((e) => StopModel.fromJson(e)).toList()

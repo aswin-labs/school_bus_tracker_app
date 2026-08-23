@@ -3,28 +3,34 @@ import 'package:school_bus_tracker/core/network/api_config.dart';
 import 'package:school_bus_tracker/core/network/interceptors/auth_interceptor.dart';
 
 class ApiClient {
-  static final Dio _dio =
-      Dio(
-          BaseOptions(
-            baseUrl: ApiConfig.acadobsDevBaseUrl,
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            followRedirects: true,
-            validateStatus: (_) => true,
-            headers: {'Content-Type': 'application/json'},
-          ),
-        )
-        ..interceptors.addAll([
-          AuthInterceptor(),
-          LogInterceptor(
-            request: true,
-            requestHeader: true,
-            requestBody: true,
-            responseHeader: true,
-            responseBody: true,
-            error: true,
-          ),
-        ]);
+  static final Dio _dio = _createDio();
+
+  static Dio _createDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.acadobsDevBaseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        followRedirects: true,
+        validateStatus: (_) => true,
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+
+    dio.interceptors.addAll([
+      AuthInterceptor(dio),
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+      ),
+    ]);
+
+    return dio;
+  }
 
   /// Generic GET request
   static Future<Response> get(String endpoint, {dynamic data}) async {

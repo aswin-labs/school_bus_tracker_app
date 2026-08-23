@@ -1,6 +1,6 @@
 {
-    "name": "school_bus_tracker",
-    "short_name": "school_bus_tracker",
+    "name": "Acadobs Tracker",
+    "short_name": "Acadobs Tracker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

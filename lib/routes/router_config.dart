@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_bus_tracker/core/storage/storage_services.dart';
 import 'package:school_bus_tracker/features/auth/presentation/screens/login_screen.dart';
-import 'package:school_bus_tracker/features/auth/presentation/screens/splash_screen.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/screens/driver_home_screen.dart';
 import 'package:school_bus_tracker/features/settings/presentation/screens/settings_screen.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/screens/tracking_screen.dart';
@@ -8,10 +9,22 @@ import 'package:school_bus_tracker/routes/router_constants.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
+  redirect: (context, state) async {
+    if (state.uri.path == '/') {
+      final token = await StorageService.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        return '/driverHomeScreen';
+      } else {
+        return '/loginScreen';
+      }
+    }
+    return null;
+  },
   routes: [
-
-    // splash
-    GoRoute(path: '/', builder: (context, state) => SplashScreen()),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const SizedBox.shrink(),
+    ),
 
     // login
     GoRoute(

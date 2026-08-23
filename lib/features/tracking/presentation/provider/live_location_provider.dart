@@ -37,12 +37,21 @@ class LiveLocationProvider extends ChangeNotifier {
       return;
     }
 
-    final pos = await Geolocator.getCurrentPosition();
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
 
-    currentLocation = LatLng(pos.latitude, pos.longitude);
-
-    isFetchingLocation = false;
-    notifyListeners();
+      currentLocation = LatLng(pos.latitude, pos.longitude);
+    } catch (e) {
+      debugPrint("Location fetch error: $e");
+    } finally {
+      isFetchingLocation = false;
+      notifyListeners();
+    }
   }
 
   Future<void> startTracking() async {

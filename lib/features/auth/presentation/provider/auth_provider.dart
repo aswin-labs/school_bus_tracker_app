@@ -36,12 +36,16 @@ class AuthProvider extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         final token = data['token'] as String?;
+        final refreshToken = data['refreshToken'] as String?;
 
         if (token == null) {
           return "Invalid server response";
         }
 
-        await _storageService.saveToken(token);
+        await _storageService.saveTokens(
+          accessToken: token,
+          refreshToken: refreshToken ?? '',
+        );
         log("Login Success");
         return null; // null = success
       }

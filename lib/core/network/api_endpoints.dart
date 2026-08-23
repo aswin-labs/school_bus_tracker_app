@@ -2,6 +2,9 @@ class ApiEndpoints {
   // login
   static const login = "/public/login";
 
+  // Refresh token
+  static const refreshToken = "/public/refresh-token";
+
   // routes
   static const routes = "/driver/getDriverAssignedRoutes";
 
