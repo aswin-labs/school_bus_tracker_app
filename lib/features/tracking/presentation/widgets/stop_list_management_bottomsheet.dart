@@ -21,7 +21,9 @@ class _StopListManagementBottomsheetState
   @override
   void initState() {
     super.initState();
-    context.read<StopManagementProvider>().fetchStops(widget.routeId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<StopManagementProvider>().fetchStops(widget.routeId);
+    });
   }
 
   @override
@@ -200,12 +202,9 @@ class _StopListManagementBottomsheetState
                                         Consumer<StopManagementProvider>(
                                           builder: (context, provider, _) {
                                             return Text(
-                                              provider.stops[0].routeName ==
-                                                      null
+                                              provider.route?.routeName == null
                                                   ? "No Route found!"
-                                                  : provider
-                                                            .stops[0]
-                                                            .routeName ??
+                                                  : provider.route?.routeName ??
                                                         "Route not specified!",
                                               style: const TextStyle(
                                                 fontSize: 18,
@@ -323,6 +322,7 @@ class _StopListManagementBottomsheetState
                                         builder: (context) =>
                                             StopDetailsBottomsheet(
                                               stopId: stop.id ?? 0,
+                                              routeId: widget.routeId,
                                             ),
                                       );
                                     },

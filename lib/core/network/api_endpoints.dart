@@ -37,4 +37,16 @@ class ApiEndpoints {
 
   // route inactive
   static const updateRouteInactive = "/driver/routeInactive";
+
+  // update live location
+  static const updateLiveLocation = "/driver/updateLiveLocation";
+
+  // edit student stop status
+  static const editStudentsStopStatus = "/driver/editStudentsStopStatus";
+
+  // get Students With Unassigned Stops By RouteId
+  static const getStudentsWithUnassignedStopsByRouteId = "/driver/getStudentsWithUnassignedStopsByRouteId";
+
+  // delete student from stop
+  static const deleteStudentFromStop = "/driver/deleteStudentFromStop";
 }

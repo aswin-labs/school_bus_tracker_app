@@ -11,21 +11,28 @@ class StopServices {
   }
 
   // GET stop details
-  Future<Response> fetchSingleStop({required int stopId}) async {
+  Future<Response> fetchSingleStop({
+    required int stopId,
+    required int routeId,
+  }) async {
     final response = await ApiClient.get(
-      "${ApiEndpoints.getStopDetails}/$stopId",
+      "${ApiEndpoints.getStopDetails}/$stopId?route_id=$routeId",
     );
     return response;
   }
 
   // POST creating single stop
-  Future<Response> createStop({required StopModel stop}) async {
+  Future<Response> createStop({
+    required StopModel stop,
+    required bool both,
+  }) async {
     final response = await ApiClient.post(ApiEndpoints.addStop, {
       "route_id": stop.routeId,
       "stop_name": stop.stopName,
       "priority": stop.priority,
       "latitude": stop.latitude,
       "longitude": stop.longitude,
+      "both": both,
     });
     return response;
   }
@@ -55,12 +62,14 @@ class StopServices {
   Future<Response> updateStopAndStudent({
     required List<int> studentIds,
     required int stopId,
-    // required String studentStatus,
+    required double latitude,
+    required double longitude,
   }) async {
     final response = await ApiClient.put(ApiEndpoints.updateStopAndStudent, {
       "stop_id": stopId,
       "student_ids": studentIds,
-      // "student_status": studentStatus,
+      "latitude": latitude,
+      "longitude": longitude,
     });
     return response;
   }
@@ -73,6 +82,21 @@ class StopServices {
     final response = await ApiClient.post(ApiEndpoints.updateRouteInactive, {
       "route_id": routeId,
     });
+    return response;
+  }
+
+  // Update live location
+  Future<Response> updateLiveLocation({
+    required int routeId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await ApiClient.post(ApiEndpoints.updateLiveLocation, {
+      "route_id": routeId,
+      "latitude": latitude,
+      "longitude": longitude,
+    });
+
     return response;
   }
 }

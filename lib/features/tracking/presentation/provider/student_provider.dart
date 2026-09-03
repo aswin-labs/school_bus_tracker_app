@@ -75,4 +75,31 @@ class StudentProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // edit student stop status
+  Future<void> editStudentStopStatus({
+    required int studentStopId,
+    required String studentId,
+    required String status,
+  }) async {
+    _isSubmitting = true;
+    notifyListeners();
+
+    try {
+      final response = await StudentServices().editStudentsStopStatus(
+        studentStopId: studentStopId,
+        studentId: studentId,
+        status: status,
+      );
+
+      if (response.statusCode == 200) {
+        log("Student stop status updated successfully.");
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
 }

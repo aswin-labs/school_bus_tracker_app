@@ -10,7 +10,9 @@ import 'package:school_bus_tracker/features/driver_routes/data/models/route_mode
 import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/driver_route_card.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/drop_stop_preview_dialog.dart';
+import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/resume_trip_dialog.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/start_journey_dialog.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -47,9 +49,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 
   // activate route
-  Future<bool> _activateRoute(int routeId) async {
+  Future<bool> _activateRoute(int routeId, BuildContext context) async {
     final provider = context.read<RouteProvider>();
-    final error = await provider.activateRoute(routeId);
+    final error = await provider.activateRoute(
+      routeId: routeId,
+      context: context,
+    );
 
     if (!mounted) return false;
 
@@ -83,7 +88,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
     // 1. If already active → go tracking
     if (isLive) {
-      context.goNamed(RouterConstants.trackingScreen, extra: route.id);
+      _showResumeTripDialog(route);
       return;
     }
 
@@ -118,7 +123,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               onStart: () async {
                 setStateDialog(() => isLoading = true);
 
-                final success = await _activateRoute(route.id);
+                final success = await _activateRoute(route.id, context);
 
                 if (!context.mounted) return;
 
@@ -132,6 +137,41 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 } else {
                   setStateDialog(() => isLoading = false);
                 }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // show resume dialod
+  void _showResumeTripDialog(RouteModel route) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        bool isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return ResumeTripDialog(
+              isLoading: isLoading,
+              onResume: () async {
+                setStateDialog(() => isLoading = true);
+
+                final provider = context.read<StopManagementProvider>();
+
+                await provider.startLiveLocationSharing(route.id);
+
+                if (!context.mounted) return;
+
+                Navigator.of(context).pop();
+
+                context.goNamed(
+                  RouterConstants.trackingScreen,
+                  extra: route.id,
+                );
               },
             );
           },

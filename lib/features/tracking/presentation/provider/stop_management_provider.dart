@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:developer';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/services/stop_services.dart';
@@ -26,6 +29,8 @@ class StopManagementProvider extends ChangeNotifier {
   int? get currentRouteId => _currentRouteId;
 
   LatLng? selectedLocation;
+
+  RouteModel? route;
 
   /// ───────── LOADING STATES ─────────
 
@@ -78,7 +83,9 @@ class StopManagementProvider extends ChangeNotifier {
 
   StopModel? get nextStop {
     try {
-      return _stops.firstWhere((stop) => stop.arrived != true);
+      return _stops.firstWhere(
+        (stop) => stop.stopLiveStatuses?.isEmpty == true,
+      );
     } catch (_) {
       return null;
     }
@@ -94,14 +101,12 @@ class StopManagementProvider extends ChangeNotifier {
 
     try {
       final response = await StopServices().fetchStops(routeId: routeId);
-      log("fetchStops response: ${response.data}");
-
       if (response.statusCode == 200) {
-        log("fetchStops response: ${response.data}");
+        route = RouteModel.fromJson(response.data['route']);
         final List<dynamic> dataList = response.data['data'] ?? [];
-
         _stops = dataList.map((e) => StopModel.fromJson(e)).toList()
           ..sort((a, b) => (a.priority ?? 0).compareTo(b.priority ?? 0));
+        log("live statuses: ${_stops.map((e) => e.stopLiveStatuses)}");
       }
     } catch (e) {
       log("Fetch Stops Error: $e");
@@ -112,12 +117,18 @@ class StopManagementProvider extends ChangeNotifier {
 
   /// ───────────────── FETCH SINGLE STOP ─────────────────
 
-  Future<void> fetchSingleStop(int stopId) async {
+  Future<void> fetchSingleStop({
+    required int stopId,
+    required int routeId,
+  }) async {
     singleStop = null;
     _setDetailsLoading(true);
 
     try {
-      final response = await StopServices().fetchSingleStop(stopId: stopId);
+      final response = await StopServices().fetchSingleStop(
+        stopId: stopId,
+        routeId: routeId,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
@@ -158,6 +169,7 @@ class StopManagementProvider extends ChangeNotifier {
     required String stopName,
     required int priority,
     required int routeId,
+    required bool isEnabled,
   }) async {
     if (_isCreatingStop) return null;
 
@@ -176,6 +188,7 @@ class StopManagementProvider extends ChangeNotifier {
           stopName: stopName,
           priority: priority,
         ),
+        both: isEnabled,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -293,9 +306,16 @@ class StopManagementProvider extends ChangeNotifier {
     _setSubmitting(true);
 
     try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
       final response = await StopServices().updateStopAndStudent(
         stopId: stopId,
         studentIds: _selectedStudentIds.toList(),
+        latitude: position.latitude,
+        longitude: position.longitude,
       );
 
       if (response.statusCode == 200) {
@@ -328,6 +348,7 @@ class StopManagementProvider extends ChangeNotifier {
         routeId: routeId,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
+        stopLiveLocationSharing();
         log("Route Inactivated Successfully");
       }
     } catch (e) {
@@ -336,6 +357,86 @@ class StopManagementProvider extends ChangeNotifier {
       _isInactivatingRoute = false;
       notifyListeners();
     }
+  }
+
+  /// ───────────LIVE LOCATION SHARING ────────
+  Timer? _locationTimer;
+  bool _isSharingLocation = false;
+
+  Future<void> startLiveLocationSharing(int routeId) async {
+    if (_isSharingLocation) return;
+
+    // Check location service & permissions (required for web compatibility)
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      log("Location services are disabled.");
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      log("Location permissions are denied.");
+      return;
+    }
+
+    _isSharingLocation = true;
+
+    // Send location immediately when tracking starts
+    await _sendLiveLocation(routeId);
+
+    // Then send location every 20 seconds
+    _locationTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _sendLiveLocation(routeId),
+    );
+  }
+
+  Future<void> _sendLiveLocation(int routeId) async {
+    try {
+      late LocationSettings locationSettings;
+      if (kIsWeb) {
+        locationSettings = WebSettings(
+          accuracy: LocationAccuracy.high,
+          maximumAge: const Duration(seconds: 5),
+        );
+      } else {
+        locationSettings = const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        );
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: locationSettings,
+      );
+
+      final response = await StopServices().updateLiveLocation(
+        routeId: routeId,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      if (response.statusCode == 200) {
+        log(
+          "Live location sent: "
+          "${position.latitude}, ${position.longitude}",
+        );
+      }
+    } catch (e) {
+      log("Live Location Error: $e");
+    }
+  }
+
+  void stopLiveLocationSharing() {
+    _locationTimer?.cancel();
+    _locationTimer = null;
+    _isSharingLocation = false;
+
+    log("Live location sharing stopped");
   }
 
   /// ───────────────── RESET ─────────────────

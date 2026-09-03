@@ -48,6 +48,8 @@ class _AddStopDialogState extends State<AddStopDialog> {
     });
   }
 
+  bool isEnabled = true;
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -169,7 +171,24 @@ class _AddStopDialogState extends State<AddStopDialog> {
                       hintText: 'Enter stop name',
                       icon: Icons.text_fields_rounded,
                     ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: isEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          isEnabled = value ?? false;
+                        });
+                      },
+                      title: const Text(
+                        'Is this stop also for the return/drop route?',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
 
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
                     const SizedBox(height: 18),
 
                     // Priority
@@ -368,18 +387,17 @@ class _AddStopDialogState extends State<AddStopDialog> {
       stopName: _titleController.text.trim(),
       priority: int.parse(_priorityController.text),
       routeId: _selectedRoute!.id,
+      isEnabled: isEnabled,
     );
 
     if (!mounted) return;
 
     if (result == null) {
-      // ✅ SUCCESS
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Stop added successfully')));
       Navigator.pop(context);
     } else {
-      // ❌ ERROR
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result)));

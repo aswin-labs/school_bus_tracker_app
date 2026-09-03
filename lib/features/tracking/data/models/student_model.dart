@@ -1,23 +1,28 @@
 class StudentModel {
   int id;
-  String name;
-  String regNo;
-  String? guardianName;
-  String? stopName;
+  String fullName;
+  String? regNo;
+  User? user;
 
   StudentModel({
     required this.id,
-    required this.name,
-    required this.regNo,
-    this.guardianName,
-    this.stopName,
+    required this.fullName,
+    this.regNo,
+    this.user,
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) => StudentModel(
     id: json["id"],
-    name: json["full_name"],
+    fullName: json["full_name"],
     regNo: json["reg_no"],
-    stopName: json["stop_name"],
-    guardianName: json["guardian_name"],
+    user: json["User"] == null ? null : User.fromJson(json["User"]),
   );
+}
+
+class User {
+  String? name;
+
+  User({this.name});
+
+  factory User.fromJson(Map<String, dynamic> json) => User(name: json["name"]);
 }

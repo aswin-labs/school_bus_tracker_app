@@ -1,8 +1,10 @@
 import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/driver_routes/data/services/route_services.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 
 class RouteProvider extends ChangeNotifier {
   bool _isLoading = false;
@@ -54,16 +56,22 @@ class RouteProvider extends ChangeNotifier {
   }
 
   // activate route
-  Future<String?> activateRoute(int routeId) async {
+  Future<String?> activateRoute({
+    required int routeId,
+    required BuildContext context,
+  }) async {
     _isLoadingTwo = true;
     notifyListeners();
     try {
       final response = await RouteServices().activateRoute(routeId);
       if (response.statusCode == 200) {
+        if (!context.mounted) return null;
+        await context.read<StopManagementProvider>().startLiveLocationSharing(
+          routeId,
+        );
         log("Route is live");
         return null;
       }
-      // Server returned an error
       final errorMsg =
           response.data['message'] ??
           "Failed to fetch routes (status: ${response.statusCode})";
@@ -76,26 +84,26 @@ class RouteProvider extends ChangeNotifier {
     }
   }
 
-    // complete route
-  Future<String?> completeRoute(int routeId) async {
-    _isLoadingTwo = true;
-    notifyListeners();
-    try {
-      final response = await RouteServices().completeRoute(routeId);
-      if (response.statusCode == 200) {
-        log("Route is complete");
-        return null;
-      }
-      // Server returned an error
-      final errorMsg =
-          response.data['message'] ??
-          "Failed to fetch routes (status: ${response.statusCode})";
-      return errorMsg;
-    } catch (e) {
-      return "Something went wrong. Try again.";
-    } finally {
-      _isLoadingTwo = false;
-      notifyListeners();
-    }
-  }
+  // complete route
+  // Future<String?> completeRoute(int routeId) async {
+  //   _isLoadingTwo = true;
+  //   notifyListeners();
+  //   try {
+  //     final response = await RouteServices().completeRoute(routeId);
+  //     if (response.statusCode == 200) {
+  //       log("Route is complete");
+  //       return null;
+  //     }
+  //     // Server returned an error
+  //     final errorMsg =
+  //         response.data['message'] ??
+  //         "Failed to fetch routes (status: ${response.statusCode})";
+  //     return errorMsg;
+  //   } catch (e) {
+  //     return "Something went wrong. Try again.";
+  //   } finally {
+  //     _isLoadingTwo = false;
+  //     notifyListeners();
+  //   }
+  // }
 }

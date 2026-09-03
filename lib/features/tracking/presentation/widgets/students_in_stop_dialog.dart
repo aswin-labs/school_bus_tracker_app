@@ -15,7 +15,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StopManagementProvider>().fetchSingleStop(widget.stopId);
+      // context.read<StopManagementProvider>().fetchSingleStop(widget.stopId);
     });
   }
 
@@ -263,7 +263,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final student = students[index];
-                      final initials = (student.name)
+                      final initials = (student.fullName)
                           .trim()
                           .split(' ')
                           .take(2)
@@ -319,7 +319,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    student.name,
+                                    student.fullName,
                                     style: const TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
@@ -339,7 +339,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
-                                          student.guardianName ?? '',
+                                          student.user?.name ?? '',
                                           style: TextStyle(
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.w500,

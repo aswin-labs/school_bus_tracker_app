@@ -27,7 +27,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
 
     final provider = context.read<StopManagementProvider>();
     provider.clearSelection();
-    provider.fetchSingleStop(widget.stopId);
+    // provider.fetchSingleStop(widget.stopId);
   }
 
   void _initializeSelection(StopManagementProvider provider) {
@@ -296,7 +296,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                       final colorPair =
                           avatarColors[index % avatarColors.length];
 
-                      final initials = (student.name)
+                      final initials = (student.fullName)
                           .trim()
                           .split(' ')
                           .take(2)
@@ -355,7 +355,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      student.name,
+                                      student.fullName,
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
@@ -381,7 +381,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                         const SizedBox(width: 5),
                                         Expanded(
                                           child: Text(
-                                            student.guardianName ??
+                                            student.user?.name ??
                                                 'Not mentioned',
                                             style: TextStyle(
                                               fontSize: 12.5,

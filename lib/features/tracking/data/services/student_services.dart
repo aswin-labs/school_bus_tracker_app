@@ -6,7 +6,7 @@ class StudentServices {
   // GET students by routeId
   Future<Response> fetchStudentsByRouteId({required int routeId}) async {
     final response = await ApiClient.get(
-      "${ApiEndpoints.getStudents}/$routeId",
+      "${ApiEndpoints.getStudentsWithUnassignedStopsByRouteId}/$routeId",
     );
     return response;
   }
@@ -20,6 +20,30 @@ class StudentServices {
       "student_ids": studentIds,
       "stop_id": stopId,
     });
+    return response;
+  }
+
+  // PUT edit students stop status
+  Future<Response> editStudentsStopStatus({
+    required int studentStopId,
+    required String studentId,
+    required String status,
+  }) async {
+    final response = await ApiClient.put(
+      "${ApiEndpoints.editStudentsStopStatus}/$studentStopId",
+      {"student_id": studentId, "status": status},
+    );
+    return response;
+  }
+
+  // delete student from stop
+  Future<Response> deleteStudentFromStop({
+    required int stopId,
+    required int studentid
+  }) async {
+    final response = await ApiClient.delete(
+      "${ApiEndpoints.deleteStudentFromStop}/$stopId/$studentid",
+    );
     return response;
   }
 }
