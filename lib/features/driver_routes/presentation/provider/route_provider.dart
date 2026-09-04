@@ -28,6 +28,7 @@ class RouteProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final response = await RouteServices().fetchDriverRoutes();
+      log("Fetch driver routes response: ${response.data} ");
 
       if (response.statusCode == 200) {
         final fetchedRoutes = response.data['data'];

@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
@@ -10,7 +9,6 @@ import 'package:school_bus_tracker/features/tracking/presentation/widgets/next_s
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/students_in_stop_dialog.dart';
-import 'package:school_bus_tracker/routes/router_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TrackingBottomSheet extends StatelessWidget {
@@ -321,13 +319,8 @@ class TrackingBottomSheet extends StatelessWidget {
                                           .read<StopManagementProvider>()
                                           .updateRouteInActive(
                                             routeId: routeId,
+                                            context: context,
                                           );
-
-                                      if (context.mounted) {
-                                        context.pushNamed(
-                                          RouterConstants.driverHomeScreen,
-                                        );
-                                      }
                                     },
                                 // : null
                                 style: ElevatedButton.styleFrom(

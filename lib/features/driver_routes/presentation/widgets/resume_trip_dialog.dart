@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class ResumeTripDialog extends StatefulWidget {
   final VoidCallback onResume;
+  final VoidCallback deactivateRoute;
   final bool isLoading;
 
   const ResumeTripDialog({
     super.key,
     required this.onResume,
+    required this.deactivateRoute,
     this.isLoading = false,
   });
 
@@ -60,7 +62,17 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 20),
-
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: widget.isLoading
+                        ? null
+                        : () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
               // Header
               Container(
                 padding: const EdgeInsets.all(16),
@@ -112,21 +124,21 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                           child: OutlinedButton(
                             onPressed: widget.isLoading
                                 ? null
-                                : () => Navigator.pop(context),
+                                : widget.deactivateRoute,
                             style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF3B82F6)),
+                              foregroundColor: const Color(0xFF3B82F6),
+                              disabledForegroundColor: const Color(
+                                0xFF3B82F6,
+                              ).withAlpha(128),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(
-                                color: Colors.grey[300]!,
-                                width: 1.5,
-                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             child: const Text(
-                              "Cancel",
+                              "Deactivate",
                               style: TextStyle(
-                                color: Color(0xFF6B7280),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
                               ),

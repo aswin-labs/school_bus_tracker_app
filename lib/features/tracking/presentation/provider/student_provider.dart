@@ -24,6 +24,7 @@ class StudentProvider extends ChangeNotifier {
       final response = await StudentServices().fetchStudentsByRouteId(
         routeId: routeId,
       );
+      log("Fetch students by routeId response: ${response.data} ");
       if (response.statusCode == 200) {
         _students = (response.data['data'] as List<dynamic>)
             .map((result) => StudentModel.fromJson(result))
@@ -62,6 +63,8 @@ class StudentProvider extends ChangeNotifier {
         studentIds: _selectedStudentIds.toList(),
         stopId: stopId,
       );
+      log("Selected student IDs: ${_selectedStudentIds.toList()}");
+      log("Add students to stop response: ${response.data} ");
 
       if (response.statusCode == 200) {
         _selectedStudentIds.clear();

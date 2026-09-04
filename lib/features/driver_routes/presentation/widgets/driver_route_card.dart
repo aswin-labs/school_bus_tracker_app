@@ -3,7 +3,7 @@ import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 
 class DriverRouteCard extends StatelessWidget {
   final String routeName;
-  final String timeRange;
+  final VoidCallback onStopsTap;
   final int studentsCount;
   final VoidCallback onButtonTap;
   final String buttonTitle;
@@ -13,7 +13,7 @@ class DriverRouteCard extends StatelessWidget {
   const DriverRouteCard({
     super.key,
     required this.routeName,
-    required this.timeRange,
+    required this.onStopsTap,
     required this.studentsCount,
     required this.onButtonTap,
     this.buttonTitle = 'Resume Trip',
@@ -281,38 +281,42 @@ class DriverRouteCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isLive ? 12 : 10,
-                          vertical: isLive ? 8 : 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF3B82F6).withAlpha(20),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Color(0xFF3B82F6).withAlpha(40),
-                            width: 1,
+                      InkWell(
+                        onTap: onStopsTap,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: isLive ? 15 : 14,
-                              color: Color(0xFF2563EB),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3B82F6).withAlpha(20),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Color(0xFF3B82F6).withAlpha(40),
+                              width: 1,
                             ),
-                            SizedBox(width: isLive ? 8 : 6),
-                            Text(
-                              timeRange,
-                              style: TextStyle(
-                                fontSize: isLive ? 12.5 : 11.5,
-                                fontWeight: FontWeight.w600,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // stops button
+                              Icon(
+                                Icons.location_on_rounded,
+                                size: 14,
                                 color: Color(0xFF2563EB),
-                                letterSpacing: 0.2,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 6),
+                              Text(
+                                "Stops",
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2563EB),
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],

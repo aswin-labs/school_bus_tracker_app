@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
+import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/services/stop_services.dart';
@@ -98,7 +101,7 @@ class StopManagementProvider extends ChangeNotifier {
   Future<void> fetchStops(int routeId) async {
     _setLoading(true);
     _currentRouteId = routeId;
-
+    clearStops();
     try {
       final response = await StopServices().fetchStops(routeId: routeId);
       if (response.statusCode == 200) {
@@ -340,7 +343,10 @@ class StopManagementProvider extends ChangeNotifier {
 
   /// ───────────────── UPDATE ROUTE INACTIVE ─────────────────
 
-  Future<void> updateRouteInActive({required int routeId}) async {
+  Future<void> updateRouteInActive({
+    required int routeId,
+    required BuildContext context,
+  }) async {
     _isInactivatingRoute = true;
     notifyListeners();
     try {
@@ -348,7 +354,16 @@ class StopManagementProvider extends ChangeNotifier {
         routeId: routeId,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
+        reset();
+        if (!context.mounted) return;
+        await context.read<RouteProvider>().fetchDriverRoutes();
         stopLiveLocationSharing();
+        if (!context.mounted) return;
+        Navigator.of(context).pop(); // Close the bottom sheet
+        // if (context.mounted) {
+        //   context.pushNamed(RouterConstants.driverHomeScreen);
+        // }
+
         log("Route Inactivated Successfully");
       }
     } catch (e) {
@@ -446,6 +461,13 @@ class StopManagementProvider extends ChangeNotifier {
     currentIndex = 0;
     selectedLocation = null;
     _selectedStudentIds.clear();
+    notifyListeners();
+  }
+
+  // clear stops
+  void clearStops() {
+    _stops.clear();
+    currentIndex = 0;
     notifyListeners();
   }
 }

@@ -13,6 +13,8 @@ import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/d
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/resume_trip_dialog.dart';
 import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/start_journey_dialog.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_list_management_bottomsheet.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -130,7 +132,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 if (success) {
                   Navigator.of(context).pop(); // ✅ close dialog first
 
-                  context.goNamed(
+                  context.pushNamed(
                     RouterConstants.trackingScreen,
                     extra: route.id,
                   );
@@ -168,9 +170,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
                 Navigator.of(context).pop();
 
-                context.goNamed(
+                context.pushNamed(
                   RouterConstants.trackingScreen,
                   extra: route.id,
+                );
+              },
+              deactivateRoute: () {
+                context.read<StopManagementProvider>().updateRouteInActive(
+                  routeId: route.id,
+                  context: context,
                 );
               },
             );
@@ -355,9 +363,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
                           return DriverRouteCard(
                             routeName: route.routeName ?? "Unknown Route",
-                            timeRange: route.activatedAt == null
-                                ? "8.30 AM"
-                                : formatTime(route.activatedAt.toString()),
+                            onStopsTap: () {
+                              route.totalStops == 0
+                                  ? showDialog(
+                                      context: context,
+                                      builder: (_) =>
+                                          AddStopDialog(routeId: route.id),
+                                    )
+                                  : showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      builder: (context) {
+                                        return StopListManagementBottomsheet(
+                                          routeId: route.id,
+                                        );
+                                      },
+                                    );
+                            },
                             studentsCount: route.totalStudents ?? 0,
                             isLive: isLive,
                             isPickup: isPickup,
