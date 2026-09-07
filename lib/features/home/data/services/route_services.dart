@@ -15,9 +15,9 @@ class RouteServices {
     });
   }
 
-  // POST complete route
-   Future<Response> completeRoute(int routeId) async {
-    return await ApiClient.post(ApiEndpoints.completeRoute, {
+  // POST inactivate route
+  Future<Response> inactivateRoute(int routeId) async {
+    return await ApiClient.post(ApiEndpoints.inActivateRoute, {
       "route_id": routeId,
     });
   }

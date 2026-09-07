@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
@@ -12,6 +13,7 @@ import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_st
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/google_map_view.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_list_management_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/tracking_bottom_sheet.dart';
+import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class TrackingScreen extends StatefulWidget {
   final int routeId;
@@ -129,7 +131,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
         title: const Text("Route In Progress"),
         centerTitle: true,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.goNamed(RouterConstants.driverHomeScreen),
           icon: Icon(Icons.arrow_back),
         ),
       ),

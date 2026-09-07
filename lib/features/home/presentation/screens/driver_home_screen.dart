@@ -3,18 +3,18 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
-import 'package:school_bus_tracker/core/utils/custom_snackbar.dart';
+import 'package:school_bus_tracker/core/utils/common_empty_state.dart';
 import 'package:school_bus_tracker/core/utils/date_time_helpers.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
-import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/driver_route_card.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/drop_stop_preview_dialog.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/resume_trip_dialog.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/widgets/start_journey_dialog.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
+import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/driver_route_card.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/drop_stop_preview_dialog.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/resume_trip_dialog.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/start_journey_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stops_management_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_list_management_bottomsheet.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
     if (!mounted || error == null) return;
 
-    _showError(error);
+    SnackbarHelper.showError(context, message: error);
   }
 
   // sorted routes
@@ -51,26 +51,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 
   // activate route
-  Future<bool> _activateRoute(int routeId, BuildContext context) async {
+  Future<bool> _activateRoute(int routeId) async {
     final provider = context.read<RouteProvider>();
-    final error = await provider.activateRoute(
-      routeId: routeId,
-      context: context,
-    );
+    final error = await provider.activateRoute(routeId);
 
     if (!mounted) return false;
 
     if (error != null) {
-      _showError(error);
+      SnackbarHelper.showError(context, message: error);
       return false;
     }
 
     return true;
-  }
-
-  // show error snackbar
-  void _showError(String error) {
-    CustomSnackbar.show(context, message: error, type: SnackbarType.error);
   }
 
   // handle route
@@ -84,7 +76,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     final hasStops = (route.totalStops ?? 0) > 0;
 
     if (hasActiveRoute && !isLive) {
-      _showError("Another route is already active");
+      SnackbarHelper.showError(
+        context,
+        message: "You already have an active route. Please finish it first.",
+      );
+      return;
+    }
+
+    // Check if totalStops is 0 when trying to start trip
+    if (!isLive && !hasStops) {
+      SnackbarHelper.showError(
+        context,
+        message: "This route has no stops. Please add stops first.",
+      );
       return;
     }
 
@@ -125,15 +129,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               onStart: () async {
                 setStateDialog(() => isLoading = true);
 
-                final success = await _activateRoute(route.id, context);
+                final success = await _activateRoute(route.id);
 
                 if (!context.mounted) return;
 
                 if (success) {
                   Navigator.of(context).pop(); // ✅ close dialog first
 
-                  context.pushNamed(
-                    RouterConstants.trackingScreen,
+                  context.goNamed(
+                    RouterConstants.liveTrackingScreen,
                     extra: route.id,
                   );
                 } else {
@@ -147,39 +151,39 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
-  // show resume dialod
+  // show resume dialog
   void _showResumeTripDialog(RouteModel route) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
-        bool isLoading = false;
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
+      builder: (dialogContext) {
+        return Consumer<RouteProvider>(
+          builder: (context, provider, _) {
             return ResumeTripDialog(
-              isLoading: isLoading,
-              onResume: () async {
-                setStateDialog(() => isLoading = true);
+              isDeactivating: provider.isDeactivating,
 
-                final provider = context.read<StopManagementProvider>();
-
-                await provider.startLiveLocationSharing(route.id);
-
-                if (!context.mounted) return;
-
-                Navigator.of(context).pop();
+              onResume: () {
+                Navigator.of(dialogContext).pop();
 
                 context.pushNamed(
-                  RouterConstants.trackingScreen,
+                  RouterConstants.liveTrackingScreen,
                   extra: route.id,
                 );
               },
-              deactivateRoute: () {
-                context.read<StopManagementProvider>().updateRouteInActive(
-                  routeId: route.id,
-                  context: context,
-                );
+
+              deactivateRoute: () async {
+                final error = await provider.inactivateRoute(route.id);
+
+                if (!dialogContext.mounted) return;
+
+                if (error != null) {
+                  ScaffoldMessenger.of(
+                    dialogContext,
+                  ).showSnackBar(SnackBar(content: Text(error)));
+                  return;
+                }
+
+                Navigator.of(dialogContext).pop();
               },
             );
           },
@@ -348,7 +352,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     else if (provider.driverRoutes.isEmpty)
                       SliverFillRemaining(
                         hasScrollBody: false,
-                        child: _buildEmptyState(),
+                        child: const CommonEmptyState(
+                          icon: Icons.event_busy_rounded,
+                          title: 'No Routes Today',
+                          message:
+                              'You don\'t have any assigned routes for today. Check back later.',
+                        ),
                       )
                     else
                       SliverList(
@@ -363,6 +372,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
                           return DriverRouteCard(
                             routeName: route.routeName ?? "Unknown Route",
+                            totalStops: route.totalStops ?? 0,
                             onStopsTap: () {
                               route.totalStops == 0
                                   ? showDialog(
@@ -374,13 +384,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                       context: context,
                                       isScrollControlled: true,
                                       builder: (context) {
-                                        return StopListManagementBottomsheet(
+                                        return StopsManagementBottomsheet(
                                           routeId: route.id,
                                         );
                                       },
                                     );
                             },
-                            studentsCount: route.totalStudents ?? 0,
                             isLive: isLive,
                             isPickup: isPickup,
                             onButtonTap: () => _handleRouteTap(route),
@@ -424,57 +433,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(13),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.event_busy_rounded,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'No Routes Today',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'You don\'t have any assigned routes for today. Check back later.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,7 +1,10 @@
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/theme_provider.dart';
 import 'package:school_bus_tracker/features/auth/presentation/provider/auth_provider.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/home/data/services/route_services.dart';
+import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/services/stops_services.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
@@ -17,10 +20,13 @@ getProviders() {
     ChangeNotifierProvider(create: (_) => AuthProvider()),
 
     // route provider
-    ChangeNotifierProvider(create: (_) => RouteProvider()),
+    ChangeNotifierProvider(
+      create: (_) => RouteProvider(RouteServices(), StopManagementProvider()),
+    ),
 
-    // tracking provider
-    // ChangeNotifierProvider(create: (_) => TrackingProvider()),
+    // stop provider
+    ChangeNotifierProvider(create: (_) => StopsProvider(StopServices())),
+
     ChangeNotifierProvider(
       create: (_) {
         final provider = LiveLocationProvider();

@@ -1,9 +1,4 @@
-import 'dart:convert';
-
-import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
-
-StopLiveStatusModel stopLiveStatusModelFromJson(String str) => StopLiveStatusModel.fromJson(json.decode(str));
-
+import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 
 class StopLiveStatusModel {
     String? latitude;

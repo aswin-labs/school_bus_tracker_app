@@ -12,7 +12,7 @@ class ApiEndpoints {
   static const activateRoute = "/driver/updateRouteActive";
 
   // complete route
-  static const completeRoute = "/driver/routeInactive";
+  static const inActivateRoute = "/driver/routeInactive";
 
   // add single stop
   static const addStop = "/driver/createStopForDriver";
@@ -45,7 +45,8 @@ class ApiEndpoints {
   static const editStudentsStopStatus = "/driver/editStudentsStopStatus";
 
   // get Students With Unassigned Stops By RouteId
-  static const getStudentsWithUnassignedStopsByRouteId = "/driver/getStudentsWithUnassignedStopsByRouteId";
+  static const getStudentsWithUnassignedStopsByRouteId =
+      "/driver/getStudentsWithUnassignedStopsByRouteId";
 
   // delete student from stop
   static const deleteStudentFromStop = "/driver/deleteStudentFromStop";

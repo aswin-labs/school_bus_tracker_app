@@ -1,4 +1,4 @@
-import 'package:school_bus_tracker/features/driver_routes/data/models/route_model.dart';
+import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_live_status_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
 

@@ -1,0 +1,165 @@
+import 'dart:developer';
+
+import 'package:flutter/cupertino.dart';
+import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
+import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
+import 'package:school_bus_tracker/features/home/data/services/route_services.dart';
+import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+
+class RouteProvider extends ChangeNotifier {
+  final RouteServices _routeServices;
+  final StopManagementProvider _stopManagementProvider;
+
+  RouteProvider(this._routeServices, this._stopManagementProvider);
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  bool _isActivating = false;
+  bool get isActivating => _isActivating;
+
+  bool _isDeactivating = false;
+  bool get isDeactivating => _isDeactivating;
+
+  List<RouteModel> _routes = [];
+  List<RouteModel> get driverRoutes => _routes;
+
+  // ---------------------------------------------------------------------------
+  // Loading helpers
+  // ---------------------------------------------------------------------------
+
+  void _setLoading(bool value) {
+    if (_isLoading == value) return;
+
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void _setActivating(bool value) {
+    if (_isActivating == value) return;
+
+    _isActivating = value;
+    notifyListeners();
+  }
+
+  void _setDeactivating(bool value) {
+    if (_isDeactivating == value) return;
+
+    _isDeactivating = value;
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fetch routes
+  // ---------------------------------------------------------------------------
+
+  Future<String?> fetchDriverRoutes() async {
+    _setLoading(true);
+
+    try {
+      final response = await _routeServices.fetchDriverRoutes();
+
+      log('Fetch driver routes response: ${response.data}');
+
+      if (response.statusCode != 200) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to fetch routes',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final data = response.data['data'];
+
+      if (data is! List) {
+        _routes = [];
+        notifyListeners();
+        return 'No routes found';
+      }
+
+      _routes = data
+          .map<RouteModel>((json) => RouteModel.fromJson(json))
+          .toList();
+
+      notifyListeners();
+
+      log('Fetched routes: $_routes');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Fetch driver routes error: $e', stackTrace: stackTrace);
+
+      return 'Something went wrong. Try again.';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Activate route
+  // ---------------------------------------------------------------------------
+
+  Future<String?> activateRoute(int routeId) async {
+    _setActivating(true);
+
+    try {
+      final response = await _routeServices.activateRoute(routeId);
+
+      if (response.statusCode != 200) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to Activate route',
+          statusCode: response.statusCode,
+        );
+      }
+
+      await _stopManagementProvider.startLiveLocationSharing(routeId);
+      await fetchDriverRoutes();
+
+      log('Route $routeId is live');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Activate route error: $e', stackTrace: stackTrace);
+
+      return 'Something went wrong. Try again.';
+    } finally {
+      _setActivating(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Deactivate route
+  // ---------------------------------------------------------------------------
+
+  Future<String?> inactivateRoute(int routeId) async {
+    _setDeactivating(true);
+
+    try {
+      final response = await _routeServices.inactivateRoute(routeId);
+
+      if (response.statusCode != 200) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to deactivate route',
+          statusCode: response.statusCode,
+        );
+      }
+      _stopManagementProvider.stopLiveLocationSharing();
+      await fetchDriverRoutes();
+
+      log('Route $routeId is inactive');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Deactivate route error: $e', stackTrace: stackTrace);
+
+      return 'Something went wrong. Try again.';
+    } finally {
+      _setDeactivating(false);
+    }
+  }
+}

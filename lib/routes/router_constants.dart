@@ -1,8 +1,4 @@
 class RouterConstants {
-
-  // sample
-  static const String sampleMapScreen = 'sampleMapScreen';
-  // static const String sampleDriverScreen = 'sampleDriverScreen';
   // login
   static const String loginScreen = 'loginScreen';
 
@@ -14,4 +10,7 @@ class RouterConstants {
 
   // tracking
   static const String trackingScreen = 'trackingScreen';
+
+  // live tracking
+  static const String liveTrackingScreen = 'liveTrackingScreen';
 }

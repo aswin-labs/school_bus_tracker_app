@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_bus_tracker/core/storage/storage_services.dart';
 import 'package:school_bus_tracker/features/auth/presentation/screens/login_screen.dart';
-import 'package:school_bus_tracker/features/driver_routes/presentation/screens/driver_home_screen.dart';
+import 'package:school_bus_tracker/features/home/presentation/screens/driver_home_screen.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/screens/live_tracking_screen.dart';
 import 'package:school_bus_tracker/features/settings/presentation/screens/settings_screen.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
@@ -54,6 +55,16 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final routeId = state.extra as int;
         return TrackingScreen(routeId: routeId);
+      },
+    ),
+
+    // live tracking screen
+    GoRoute(
+      path: '/liveTrackingScreen',
+      name: RouterConstants.liveTrackingScreen,
+      builder: (context, state) {
+        final routeId = state.extra as int;
+        return LiveTrackingScreen(routeId: routeId);
       },
     ),
   ],

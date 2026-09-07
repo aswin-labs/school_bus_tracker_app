@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class ResumeTripDialog extends StatefulWidget {
   final VoidCallback onResume;
   final VoidCallback deactivateRoute;
-  final bool isLoading;
+  final bool isDeactivating;
 
   const ResumeTripDialog({
     super.key,
     required this.onResume,
     required this.deactivateRoute,
-    this.isLoading = false,
+    this.isDeactivating = false,
   });
 
   @override
@@ -66,7 +66,7 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   IconButton(
-                    onPressed: widget.isLoading
+                    onPressed: widget.isDeactivating
                         ? null
                         : () => Navigator.pop(context),
                     icon: const Icon(Icons.close_rounded),
@@ -122,7 +122,7 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: widget.isLoading
+                            onPressed: widget.isDeactivating
                                 ? null
                                 : widget.deactivateRoute,
                             style: OutlinedButton.styleFrom(
@@ -136,19 +136,30 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              "Deactivate",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
+                            child: widget.isDeactivating
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF3B82F6),
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    "Deactivate",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: widget.isLoading
+                            onPressed: widget.isDeactivating
                                 ? null
                                 : widget.onResume,
                             style: ElevatedButton.styleFrom(
@@ -163,31 +174,20 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: widget.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.play_arrow_rounded, size: 22),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        "Resume",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ],
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.play_arrow_rounded, size: 22),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Resume",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
