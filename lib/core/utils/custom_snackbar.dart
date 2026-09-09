@@ -21,7 +21,8 @@ class CustomSnackbar {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
-    final overlay = Overlay.of(context);
+    final overlay =
+        Overlay.maybeOf(context, rootOverlay: true) ?? Overlay.of(context);
     late OverlayEntry overlayEntry;
 
     overlayEntry = OverlayEntry(
@@ -31,7 +32,11 @@ class CustomSnackbar {
         duration: duration,
         actionLabel: actionLabel,
         onAction: onAction,
-        onDismiss: () => overlayEntry.remove(),
+        onDismiss: () {
+          if (overlayEntry.mounted) {
+            overlayEntry.remove();
+          }
+        },
       ),
     );
 

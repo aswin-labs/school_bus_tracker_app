@@ -177,9 +177,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 if (!dialogContext.mounted) return;
 
                 if (error != null) {
-                  ScaffoldMessenger.of(
-                    dialogContext,
-                  ).showSnackBar(SnackBar(content: Text(error)));
+                  SnackbarHelper.showError(dialogContext, message: error);
                   return;
                 }
 

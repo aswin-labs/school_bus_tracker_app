@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
 import 'package:school_bus_tracker/core/theme/theme_provider.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/auth/presentation/provider/auth_provider.dart';
 import 'package:school_bus_tracker/core/widgets/common_pop_up.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
@@ -26,9 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
+      SnackbarHelper.showError(context, message: error);
     } else {
       context.goNamed(RouterConstants.loginScreen);
     }

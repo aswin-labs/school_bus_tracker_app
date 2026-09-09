@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
@@ -380,9 +381,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
     if (_titleController.text.isEmpty ||
         _priorityController.text.isEmpty ||
         _selectedRouteId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Fill all fields')));
+      SnackbarHelper.showError(context, message: 'Fill all fields');
       return;
     }
 
@@ -392,7 +391,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
       routeId: _selectedRouteId!,
       isEnabled: isEnabled,
     );
-    
+
     if (!mounted) return;
 
     await context.read<RouteProvider>().fetchDriverRoutes();
@@ -400,14 +399,10 @@ class _AddStopDialogState extends State<AddStopDialog> {
     if (!mounted) return;
 
     if (result == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Stop added successfully')));
+      SnackbarHelper.showSuccess(context, message: 'Stop added successfully');
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result)));
+      SnackbarHelper.showError(context, message: result);
     }
   }
 

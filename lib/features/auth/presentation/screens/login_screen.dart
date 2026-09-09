@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/auth/presentation/provider/auth_provider.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
@@ -39,12 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: const Color(0xFFDC2626),
-        ),
-      );
+      SnackbarHelper.showError(context, message: error);
     } else {
       context.goNamed(RouterConstants.driverHomeScreen);
     }
