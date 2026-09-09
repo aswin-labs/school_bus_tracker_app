@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/rearrange_stops_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stop_detials_bottomsheet.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stop_tile.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 
 class StopsManagementBottomsheet extends StatefulWidget {
   final int routeId;
@@ -21,8 +23,16 @@ class _StopsManagementBottomsheetState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StopsProvider>().fetchStopsByRouteId(widget.routeId);
+      _loadStops();
     });
+  }
+
+  Future<void> _loadStops() async {
+    final provider = context.read<StopsProvider>();
+    final error = await provider.fetchStopsByRouteId(widget.routeId);
+    if (!mounted || error == null) return;
+
+    SnackbarHelper.showError(context, message: error);
   }
 
   @override
@@ -98,6 +108,7 @@ class _StopsManagementBottomsheetState
                       ),
                     ),
                     const Spacer(),
+
                     const SizedBox(width: 36), // Balance
                   ],
                 ),
@@ -258,7 +269,7 @@ class _StopsManagementBottomsheetState
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'All Stops in This Route',
+                                  'Total ${stops.length} Stops',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium!
@@ -270,30 +281,39 @@ class _StopsManagementBottomsheetState
                                       ),
                                 ),
                                 const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF3B82F6,
-                                    ).withAlpha(20),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF3B82F6,
-                                      ).withAlpha(60),
-                                      width: 1,
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    final updated = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) => RearrangeStopsDialog(
+                                        stops: provider.stops,
+                                        routeId: widget.routeId,
+                                        isPickupRoute:
+                                            provider.route?.type == "PICKUP",
+                                      ),
+                                    );
+                                    if (updated == true) {
+                                      _loadStops();
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
                                     ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                   ),
-                                  child: Text(
-                                    '${stops.length}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF3B82F6),
-                                      letterSpacing: 0.3,
+                                  icon: const Icon(
+                                    Icons.swap_vert_rounded,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'Reorder',
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),

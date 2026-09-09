@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:school_bus_tracker/features/tracking/data/models/student_model.dart';
-import 'package:school_bus_tracker/features/tracking/data/services/student_services.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/services/student_services.dart';
 
 class StudentProvider extends ChangeNotifier {
   bool _isLoading = false;
@@ -80,7 +80,7 @@ class StudentProvider extends ChangeNotifier {
   }
 
   // edit student stop status
-  Future<void> editStudentStopStatus({
+  Future<bool> editStudentStopStatus({
     required int studentStopId,
     required String studentId,
     required String status,
@@ -97,9 +97,12 @@ class StudentProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         log("Student stop status updated successfully.");
+        return true;
       }
+      return false;
     } catch (e) {
       log(e.toString());
+      return false;
     } finally {
       _isSubmitting = false;
       notifyListeners();

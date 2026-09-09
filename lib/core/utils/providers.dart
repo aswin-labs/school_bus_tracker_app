@@ -9,7 +9,7 @@ import 'package:school_bus_tracker/features/tracking/presentation/provider/direc
 import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/student_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
 
 getProviders() {
   return [

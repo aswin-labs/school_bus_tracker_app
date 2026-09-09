@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/arrived_student_dialog.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/next_stop_card.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/next_stop_card.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/students_in_stop_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/students_in_stop_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TrackingBottomSheet extends StatelessWidget {

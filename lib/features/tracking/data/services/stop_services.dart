@@ -79,7 +79,7 @@ class StopServices {
     required int routeId,
     // required String studentStatus,
   }) async {
-    final response = await ApiClient.post(ApiEndpoints.updateRouteInactive, {
+    final response = await ApiClient.post(ApiEndpoints.inActivateRoute, {
       "route_id": routeId,
     });
     return response;

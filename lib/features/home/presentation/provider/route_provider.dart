@@ -117,7 +117,7 @@ class RouteProvider extends ChangeNotifier {
       }
 
       await _stopManagementProvider.startLiveLocationSharing(routeId);
-      await fetchDriverRoutes();
+      // await fetchDriverRoutes();
 
       log('Route $routeId is live');
 

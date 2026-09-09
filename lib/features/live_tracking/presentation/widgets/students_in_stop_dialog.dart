@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class StudentsInStopDialog extends StatefulWidget {
   final int stopId;
-  const StudentsInStopDialog({super.key, required this.stopId});
+  final int? routeId;
+
+  const StudentsInStopDialog({
+    super.key,
+    required this.stopId,
+    this.routeId,
+  });
 
   @override
   State<StudentsInStopDialog> createState() => _StudentsInStopDialogState();
@@ -15,7 +21,11 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // context.read<StopManagementProvider>().fetchSingleStop(widget.stopId);
+      final provider = context.read<StopsProvider>();
+      final rId = widget.routeId ?? provider.currentRouteId;
+      if (rId != null) {
+        provider.fetchSingleStop(stopId: widget.stopId, routeId: rId);
+      }
     });
   }
 
@@ -43,13 +53,13 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
             // ── HEADER ──────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 12, 14),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF3B82F6).withAlpha(255),
-                    Color(0xFF2563EB).withAlpha(255),
+                    Color(0xFF3B82F6),
+                    Color(0xFF2563EB),
                   ],
                 ),
                 borderRadius: BorderRadius.only(
@@ -89,9 +99,11 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Consumer<StopManagementProvider>(
+                        Consumer<StopsProvider>(
                           builder: (context, provider, _) => Text(
-                            provider.nextStop?.stopName ?? '',
+                            provider.singleStop?.stopName ??
+                                provider.nextStop?.stopName ??
+                                '',
                             style: const TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w700,
@@ -141,9 +153,9 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Consumer<StopManagementProvider>(
+                  Consumer<StopsProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.singleStop?.students?.length ?? 0;
+                      final count = provider.students.length;
                       return Text(
                         '$count Student${count != 1 ? 's' : ''}',
                         style: const TextStyle(
@@ -157,9 +169,9 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                   ),
                   const Spacer(),
                   // Indigo count pill
-                  Consumer<StopManagementProvider>(
+                  Consumer<StopsProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.singleStop?.students?.length ?? 0;
+                      final count = provider.students.length;
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -201,22 +213,22 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
             ),
 
             // ── DIVIDER ─────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: const Color(0xFFE2E8F0),
+                color: Color(0xFFE2E8F0),
               ),
             ),
 
             // ── STUDENT LIST ─────────────────────────────────────────
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 280),
-              child: Consumer<StopManagementProvider>(
+              child: Consumer<StopsProvider>(
                 builder: (context, provider, _) {
-                  final students = provider.singleStop?.students ?? [];
-                  if (provider.isLoading) {
+                  final students = provider.students;
+                  if (provider.isDetailsLoading) {
                     return const Center(
                       child: CircularProgressIndicator(
                         color: Color(0xFF3B82F6),
@@ -395,12 +407,8 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3B82F6),
+                    backgroundColor: const Color(0xFF3B82F6),
                     foregroundColor: Colors.white,
-                    // side: const BorderSide(
-                    //   color: Color(0xFF3B82F6),
-                    //   width: 1.5,
-                    // ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
