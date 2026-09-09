@@ -429,6 +429,8 @@ class StopManagementProvider extends ChangeNotifier {
         locationSettings: locationSettings,
       );
 
+      if (!_isSharingLocation) return;
+
       final response = await StopServices().updateLiveLocation(
         routeId: routeId,
         latitude: position.latitude,
@@ -440,6 +442,11 @@ class StopManagementProvider extends ChangeNotifier {
           "Live location sent: "
           "${position.latitude}, ${position.longitude}",
         );
+      } else if (response.statusCode == 404 || response.statusCode == 400) {
+        log(
+          "Route is inactive or not found (Status ${response.statusCode}). Stopping location sharing.",
+        );
+        stopLiveLocationSharing();
       }
     } catch (e) {
       log("Live Location Error: $e");

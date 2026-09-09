@@ -2,12 +2,10 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
-import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/services/stops_services.dart';
@@ -33,11 +31,26 @@ class StopsProvider extends ChangeNotifier {
   bool _isSubmitting = false;
   bool get isSubmitting => _isSubmitting;
 
-  bool _isInactivatingRoute = false;
-  bool get isInactivatingRoute => _isInactivatingRoute;
+  bool _isCreatingStop = false;
+  bool get isCreatingStop => _isCreatingStop;
+
+  bool _isUpdatingStop = false;
+  bool get isUpdatingStop => _isUpdatingStop;
+
+  LatLng? _selectedLocation;
+  LatLng? get selectedLocation => _selectedLocation;
 
   List<StopModel> _stops = [];
   List<StopModel> get stops => _stops;
+
+  List<StopModel> _unassignedPairStops = [];
+  List<StopModel> get unassignedPairStops => _unassignedPairStops;
+
+  bool _isLoadingPairStops = false;
+  bool get isLoadingPairStops => _isLoadingPairStops;
+
+  bool _isAssigningPairStops = false;
+  bool get isAssigningPairStops => _isAssigningPairStops;
 
   RouteModel? _route;
   RouteModel? get route => _route;
@@ -119,6 +132,53 @@ class StopsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setCreatingStop(bool value) {
+    if (_isCreatingStop == value) return;
+
+    _isCreatingStop = value;
+    notifyListeners();
+  }
+
+  void _setUpdatingStop(bool value) {
+    if (_isUpdatingStop == value) return;
+
+    _isUpdatingStop = value;
+    notifyListeners();
+  }
+
+  void _setLoadingPairStops(bool value) {
+    if (_isLoadingPairStops == value) return;
+
+    _isLoadingPairStops = value;
+    notifyListeners();
+  }
+
+  void _setAssigningPairStops(bool value) {
+    if (_isAssigningPairStops == value) return;
+
+    _isAssigningPairStops = value;
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Location Management
+  // ---------------------------------------------------------------------------
+
+  void setSelectedLocation(LatLng location) {
+    _selectedLocation = location;
+    notifyListeners();
+  }
+
+  void useCurrentLocation(LatLng location) {
+    _selectedLocation = location;
+    notifyListeners();
+  }
+
+  void clearSelectedLocation() {
+    _selectedLocation = null;
+    notifyListeners();
+  }
+
   // ---------------------------------------------------------------------------
   // Student Selection
   // ---------------------------------------------------------------------------
@@ -195,7 +255,7 @@ class StopsProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Fetch driver stops error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setLoading(false);
     }
@@ -205,11 +265,18 @@ class StopsProvider extends ChangeNotifier {
   // Fetch single stop
   // ---------------------------------------------------------------------------
 
+  void clearSingleStop() {
+    _singleStop = null;
+    _students = [];
+    notifyListeners();
+  }
+
   Future<String?> fetchSingleStop({
     required int stopId,
     required int routeId,
   }) async {
     _singleStop = null;
+    _students = [];
     _setDetailsLoading(true);
 
     try {
@@ -256,9 +323,110 @@ class StopsProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Fetch single stop error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setDetailsLoading(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Create Stop
+  // ---------------------------------------------------------------------------
+
+  Future<String?> createStop({
+    required String stopName,
+    required int priority,
+    required int routeId,
+    required bool isEnabled,
+  }) async {
+    if (_isCreatingStop) return null;
+
+    if (_selectedLocation == null) {
+      return 'Location not selected';
+    }
+
+    _setCreatingStop(true);
+
+    try {
+      final response = await _stopServices.createStop(
+        routeId: routeId,
+        stopName: stopName,
+        priority: priority,
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
+        both: isEnabled,
+      );
+
+      log('Create stop response: ${response.data}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to add stop',
+          statusCode: response.statusCode,
+        );
+      }
+
+      _selectedLocation = null;
+      await fetchStopsByRouteId(routeId);
+
+      log('Stop created successfully');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Create stop error: $e', stackTrace: stackTrace);
+
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _setCreatingStop(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Update Stop
+  // ---------------------------------------------------------------------------
+
+  Future<String?> updateStop({
+    required int stopId,
+    required String stopName,
+    required double latitude,
+    required double longitude,
+    required int routeId,
+  }) async {
+    if (_isUpdatingStop) return null;
+
+    _setUpdatingStop(true);
+
+    try {
+      final response = await _stopServices.updateStop(
+        stopId: stopId,
+        stopName: stopName,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      log('Update stop response: ${response.data}');
+
+      if (response.statusCode != 200) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to update stop',
+          statusCode: response.statusCode,
+        );
+      }
+
+      await fetchSingleStop(stopId: stopId, routeId: routeId);
+      await fetchStopsByRouteId(routeId);
+
+      log('Stop updated successfully');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Update stop error: $e', stackTrace: stackTrace);
+
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _setUpdatingStop(false);
     }
   }
 
@@ -296,9 +464,101 @@ class StopsProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Rearrange stop priorities error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setRearranging(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fetch unassigned stops in pair route
+  // ---------------------------------------------------------------------------
+
+  Future<String?> fetchUnassignedStopsInPairRoute(int routeId) async {
+    _setLoadingPairStops(true);
+
+    try {
+      final response = await _stopServices.fetchUnassignedStopsInPairRoute(
+        routeId: routeId,
+      );
+
+      log('Fetch unassigned pair stops response: ${response.data}');
+
+      if (response.statusCode != 200) {
+        _unassignedPairStops = [];
+        notifyListeners();
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to fetch unassigned pair stops',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final data = response.data['data'];
+
+      if (data is! List) {
+        _unassignedPairStops = [];
+        notifyListeners();
+        return null;
+      }
+
+      _unassignedPairStops = data
+          .map<StopModel>((json) => StopModel.fromJson(json))
+          .toList();
+
+      notifyListeners();
+      log('Fetched unassigned pair stops: ${_unassignedPairStops.length}');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Fetch unassigned pair stops error: $e', stackTrace: stackTrace);
+      _unassignedPairStops = [];
+      notifyListeners();
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _setLoadingPairStops(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Assign stop IDs from pair route
+  // ---------------------------------------------------------------------------
+
+  Future<String?> assignStopsFromPairRoute({
+    required int routeId,
+    required List<Map<String, dynamic>> stops,
+  }) async {
+    _setAssigningPairStops(true);
+
+    try {
+      final response = await _stopServices.assignStopIdsFromPairRoute(
+        routeId: routeId,
+        stops: stops,
+      );
+
+      log('Assign pair stops response: ${response.data}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to assign stops from pair route',
+          statusCode: response.statusCode,
+        );
+      }
+
+      // Re-fetch route stops and unassigned pair stops
+      await fetchStopsByRouteId(routeId);
+      await fetchUnassignedStopsInPairRoute(routeId);
+
+      log('Pair stops assigned successfully');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Assign pair stops error: $e', stackTrace: stackTrace);
+
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _setAssigningPairStops(false);
     }
   }
 
@@ -350,42 +610,6 @@ class StopsProvider extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // Inactivate Route (Finish Trip)
-  // ---------------------------------------------------------------------------
-
-  Future<bool> updateRouteInActive({
-    required int routeId,
-    required BuildContext context,
-  }) async {
-    _isInactivatingRoute = true;
-    notifyListeners();
-
-    try {
-      final response = await _stopServices.updateRouteInActive(
-        routeId: routeId,
-      );
-
-      log('Inactivate route response: ${response.data}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        stopLiveLocationSharing();
-        if (context.mounted) {
-          await context.read<RouteProvider>().fetchDriverRoutes();
-        }
-        return true;
-      }
-
-      return false;
-    } catch (e, stackTrace) {
-      log('Inactivate route error: $e', stackTrace: stackTrace);
-      return false;
-    } finally {
-      _isInactivatingRoute = false;
-      notifyListeners();
-    }
-  }
-
-  // ---------------------------------------------------------------------------
   // Live Location Sharing
   // ---------------------------------------------------------------------------
 
@@ -409,11 +633,15 @@ class StopsProvider extends ChangeNotifier {
       return;
     }
 
+    _locationTimer?.cancel();
+    _locationTimer = null;
     _isSharingLocation = true;
     notifyListeners();
 
     // Send immediately
     await _sendLiveLocation(routeId);
+
+    if (!_isSharingLocation) return;
 
     // Periodic every 20s
     _locationTimer = Timer.periodic(
@@ -423,6 +651,8 @@ class StopsProvider extends ChangeNotifier {
   }
 
   Future<void> _sendLiveLocation(int routeId) async {
+    if (!_isSharingLocation) return;
+
     try {
       late LocationSettings locationSettings;
       if (kIsWeb) {
@@ -440,6 +670,8 @@ class StopsProvider extends ChangeNotifier {
         locationSettings: locationSettings,
       );
 
+      if (!_isSharingLocation) return;
+
       final response = await _stopServices.updateLiveLocation(
         routeId: routeId,
         latitude: position.latitude,
@@ -448,6 +680,11 @@ class StopsProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         log("Live location sent: ${position.latitude}, ${position.longitude}");
+      } else if (response.statusCode == 404 || response.statusCode == 400) {
+        log(
+          "Route is inactive or not found (Status ${response.statusCode}). Stopping location sharing.",
+        );
+        stopLiveLocationSharing();
       }
     } catch (e) {
       log("Live Location Error: $e");
@@ -457,8 +694,10 @@ class StopsProvider extends ChangeNotifier {
   void stopLiveLocationSharing() {
     _locationTimer?.cancel();
     _locationTimer = null;
-    _isSharingLocation = false;
-    notifyListeners();
+    if (_isSharingLocation) {
+      _isSharingLocation = false;
+      notifyListeners();
+    }
     log("Live location sharing stopped");
   }
 
@@ -468,10 +707,12 @@ class StopsProvider extends ChangeNotifier {
 
   void reset() {
     _stops.clear();
+    _unassignedPairStops.clear();
     _route = null;
     _singleStop = null;
     _students.clear();
     _selectedStudentIds.clear();
+    _selectedLocation = null;
     _currentRouteId = null;
     stopLiveLocationSharing();
     notifyListeners();

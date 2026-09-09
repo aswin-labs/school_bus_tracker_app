@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_stop_dialog.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_detail_bottomsheet.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/stop_tile.dart';
 

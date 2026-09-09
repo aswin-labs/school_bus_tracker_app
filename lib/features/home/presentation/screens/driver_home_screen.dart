@@ -14,7 +14,7 @@ import 'package:school_bus_tracker/features/home/presentation/widgets/drop_stop_
 import 'package:school_bus_tracker/features/home/presentation/widgets/resume_trip_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/start_journey_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stops_management_bottomsheet.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_stop_dialog.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {

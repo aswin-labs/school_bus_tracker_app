@@ -1,16 +1,19 @@
 import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/data/services/route_services.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class RouteProvider extends ChangeNotifier {
   final RouteServices _routeServices;
-  final StopManagementProvider _stopManagementProvider;
+  StopsProvider _stopsProvider;
 
-  RouteProvider(this._routeServices, this._stopManagementProvider);
+  RouteProvider(this._routeServices, this._stopsProvider);
+
+  void updateStopsProvider(StopsProvider stopsProvider) {
+    _stopsProvider = stopsProvider;
+  }
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
@@ -92,7 +95,7 @@ class RouteProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Fetch driver routes error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setLoading(false);
     }
@@ -116,7 +119,7 @@ class RouteProvider extends ChangeNotifier {
         );
       }
 
-      await _stopManagementProvider.startLiveLocationSharing(routeId);
+      await _stopsProvider.startLiveLocationSharing(routeId);
       // await fetchDriverRoutes();
 
       log('Route $routeId is live');
@@ -125,7 +128,7 @@ class RouteProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Activate route error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setActivating(false);
     }
@@ -148,7 +151,8 @@ class RouteProvider extends ChangeNotifier {
           statusCode: response.statusCode,
         );
       }
-      _stopManagementProvider.stopLiveLocationSharing();
+      _stopsProvider.stopLiveLocationSharing();
+      _stopsProvider.reset();
       await fetchDriverRoutes();
 
       log('Route $routeId is inactive');
@@ -157,7 +161,7 @@ class RouteProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       log('Deactivate route error: $e', stackTrace: stackTrace);
 
-      return 'Something went wrong. Try again.';
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setDeactivating(false);
     }

@@ -4,6 +4,44 @@ import 'package:school_bus_tracker/core/network/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 
 class StopServices {
+  // POST creating single stop
+  Future<Response> createStop({
+    required int routeId,
+    required String stopName,
+    required int priority,
+    required double latitude,
+    required double longitude,
+    required bool both,
+  }) async {
+    final response = await ApiClient.post(ApiEndpoints.addStop, {
+      "route_id": routeId,
+      "stop_name": stopName,
+      "priority": priority,
+      "latitude": latitude,
+      "longitude": longitude,
+      "both": both,
+    });
+    return response;
+  }
+
+  // PUT update stop details
+  Future<Response> updateStop({
+    required int stopId,
+    required String stopName,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await ApiClient.put(
+      "${ApiEndpoints.updateStop}/$stopId",
+      {
+        "stop_name": stopName,
+        "latitude": latitude,
+        "longitude": longitude,
+      },
+    );
+    return response;
+  }
+
   // GET stops by routeId
   Future<Response> fetchStops({required int routeId}) async {
     final response = await ApiClient.get("${ApiEndpoints.getStops}/$routeId");
@@ -51,16 +89,6 @@ class StopServices {
     return response;
   }
 
-  // POST update route Inactive
-  Future<Response> updateRouteInActive({
-    required int routeId,
-  }) async {
-    final response = await ApiClient.post(ApiEndpoints.inActivateRoute, {
-      "route_id": routeId,
-    });
-    return response;
-  }
-
   // POST update live location
   Future<Response> updateLiveLocation({
     required int routeId,
@@ -74,5 +102,26 @@ class StopServices {
     });
     return response;
   }
-}
 
+  // GET unassigned stops in pair route
+  Future<Response> fetchUnassignedStopsInPairRoute({
+    required int routeId,
+  }) async {
+    final response = await ApiClient.get(
+      "${ApiEndpoints.getUnassignedStopsInPairRoute}/$routeId",
+    );
+    return response;
+  }
+
+  // POST assign stop ids from pair route
+  Future<Response> assignStopIdsFromPairRoute({
+    required int routeId,
+    required List<Map<String, dynamic>> stops,
+  }) async {
+    final response = await ApiClient.post(
+      "${ApiEndpoints.assignStopIdsFromPairRoute}/$routeId",
+      stops,
+    );
+    return response;
+  }
+}

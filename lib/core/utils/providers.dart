@@ -6,7 +6,7 @@ import 'package:school_bus_tracker/features/home/presentation/provider/route_pro
 import 'package:school_bus_tracker/features/live_tracking/data/services/stops_services.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
@@ -19,13 +19,23 @@ getProviders() {
     // auth provider
     ChangeNotifierProvider(create: (_) => AuthProvider()),
 
-    // route provider
-    ChangeNotifierProvider(
-      create: (_) => RouteProvider(RouteServices(), StopManagementProvider()),
-    ),
-
     // stop provider
     ChangeNotifierProvider(create: (_) => StopsProvider(StopServices())),
+
+    // route provider
+    ChangeNotifierProxyProvider<StopsProvider, RouteProvider>(
+      create: (context) => RouteProvider(
+        RouteServices(),
+        context.read<StopsProvider>(),
+      ),
+      update: (context, stopsProvider, routeProvider) {
+        if (routeProvider != null) {
+          routeProvider.updateStopsProvider(stopsProvider);
+          return routeProvider;
+        }
+        return RouteProvider(RouteServices(), stopsProvider);
+      },
+    ),
 
     ChangeNotifierProvider(
       create: (_) {

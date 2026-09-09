@@ -12,7 +12,28 @@ class ApiErrorUtils {
       }
     }
 
-    return '$defaultMessage'
-        '${statusCode != null ? ' (status: $statusCode)' : ''}';
+    if (statusCode == null || statusCode == 0) {
+      return defaultMessage;
+    }
+
+    return '$defaultMessage (status: $statusCode)';
+  }
+
+  static String getExceptionErrorMessage(
+    dynamic error, {
+    String defaultMessage = 'Something went wrong. Try again.',
+  }) {
+    final str = error.toString().toLowerCase();
+    if (str.contains('socketexception') ||
+        str.contains('connection error') ||
+        str.contains('connection refused') ||
+        str.contains('connection timeout') ||
+        str.contains('network is unreachable') ||
+        str.contains('failed host lookup') ||
+        str.contains('handshakeexception') ||
+        str.contains('clientexception')) {
+      return 'No internet connection. Please check your network and try again.';
+    }
+    return defaultMessage;
   }
 }

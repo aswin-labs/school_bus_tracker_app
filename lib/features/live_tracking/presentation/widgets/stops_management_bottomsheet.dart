@@ -6,7 +6,8 @@ import 'package:school_bus_tracker/features/live_tracking/presentation/provider/
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/rearrange_stops_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stop_detials_bottomsheet.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stop_tile.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_stop_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/assign_pair_stops_dialog.dart';
 
 class StopsManagementBottomsheet extends StatefulWidget {
   final int routeId;
@@ -29,6 +30,7 @@ class _StopsManagementBottomsheetState
 
   Future<void> _loadStops() async {
     final provider = context.read<StopsProvider>();
+    provider.fetchUnassignedStopsInPairRoute(widget.routeId);
     final error = await provider.fetchStopsByRouteId(widget.routeId);
     if (!mounted || error == null) return;
 
@@ -132,24 +134,79 @@ class _StopsManagementBottomsheetState
 
                     if (stops.isEmpty) {
                       return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              size: 64,
-                              color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No Stops found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                size: 64,
+                                color: Colors.grey[300],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Stops found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              AddButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) =>
+                                        AddStopDialog(routeId: widget.routeId),
+                                  );
+                                },
+                                buttonText: 'Add New Stop',
+                              ),
+                              if (provider.unassignedPairStops.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final updated = await showDialog<bool>(
+                                      context: context,
+                                      builder: (_) => AssignPairStopsDialog(
+                                        routeId: widget.routeId,
+                                        currentStopsCount: 0,
+                                      ),
+                                    );
+                                    if (updated == true) {
+                                      _loadStops();
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    Icons.alt_route_rounded,
+                                    size: 18,
+                                    color: Color(0xFF3B82F6),
+                                  ),
+                                  label: Text(
+                                    'Import Stops from Pair Route (${provider.unassignedPairStops.length})',
+                                    style: const TextStyle(
+                                      color: Color(0xFF3B82F6),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: Color(0xFF3B82F6),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       );
                     }
@@ -236,7 +293,92 @@ class _StopsManagementBottomsheetState
                           ),
                         ),
 
-                        // Add Student Button (Clear call-to-action)
+                        // Import Pair Stops Banner (if available)
+                        if (provider.unassignedPairStops.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: InkWell(
+                                onTap: () async {
+                                  final updated = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AssignPairStopsDialog(
+                                      routeId: widget.routeId,
+                                      currentStopsCount: provider.stops.length,
+                                    ),
+                                  );
+                                  if (updated == true) {
+                                    _loadStops();
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFF3B82F6).withAlpha(18),
+                                        const Color(0xFF6366F1).withAlpha(18),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFF3B82F6).withAlpha(60),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF3B82F6),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.alt_route_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Import from Pair Route',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF0F172A),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${provider.unassignedPairStops.length} unassigned stop(s) available',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: Color(0xFF3B82F6),
+                                        size: 22,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        // Add Stop Button (Clear call-to-action)
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

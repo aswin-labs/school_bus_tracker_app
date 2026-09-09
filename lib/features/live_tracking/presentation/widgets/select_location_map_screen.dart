@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/live_location_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
 
 class SelectLocationMapScreen extends StatefulWidget {
   const SelectLocationMapScreen({super.key});
@@ -26,7 +26,7 @@ class _SelectLocationMapScreenState extends State<SelectLocationMapScreen> {
     _listenerAttached = true;
 
     final live = context.read<LiveLocationProvider>();
-    final stop = context.read<StopManagementProvider>();
+    final stop = context.read<StopsProvider>();
 
     live.addListener(() async {
       final loc = live.currentLocation;
@@ -50,6 +50,7 @@ class _SelectLocationMapScreenState extends State<SelectLocationMapScreen> {
     super.initState();
 
     Future.microtask(() async {
+      if (!mounted) return;
       final live = context.read<LiveLocationProvider>();
 
       if (live.currentLocation == null) {
@@ -60,7 +61,7 @@ class _SelectLocationMapScreenState extends State<SelectLocationMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final stopProvider = context.watch<StopManagementProvider>();
+    final stopProvider = context.watch<StopsProvider>();
     final selectedLocation = stopProvider.selectedLocation;
 
     return Scaffold(

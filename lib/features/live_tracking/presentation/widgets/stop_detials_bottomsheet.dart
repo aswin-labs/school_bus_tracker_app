@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
+import 'package:school_bus_tracker/core/widgets/custom_more_menu.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_student_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/assign_pair_stops_dialog.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/edit_stop_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/student_tile.dart';
 
 class StopDetailsBottomsheet extends StatefulWidget {
@@ -22,17 +25,27 @@ class StopDetailsBottomsheet extends StatefulWidget {
 }
 
 class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
+  late final StopsProvider _stopsProvider;
+
   @override
   void initState() {
     super.initState();
+    _stopsProvider = context.read<StopsProvider>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadStopDetails();
     });
   }
 
+  @override
+  void dispose() {
+    _stopsProvider.clearSingleStop();
+    super.dispose();
+  }
+
   Future<void> _loadStopDetails() async {
     final provider = context.read<StopsProvider>();
+    provider.fetchUnassignedStopsInPairRoute(widget.routeId);
     final error = await provider.fetchSingleStop(
       stopId: widget.stopId,
       routeId: widget.routeId,
@@ -115,8 +128,36 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                       ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 36),
-                    // Icon(Icons.more_vert),
+                    Consumer<StopsProvider>(
+                      builder: (context, provider, _) {
+                        final stop = provider.singleStop;
+                        if (stop == null || stop.id != widget.stopId) {
+                          return const SizedBox(width: 36);
+                        }
+                        return CustomMoreMenu(
+                          icon: Icons.more_vert_rounded,
+                          iconColor: const Color(0xFF0F172A),
+                          iconSize: 20,
+                          options: [
+                            MoreMenuOption(
+                              name: 'Edit Stop',
+                              icon: Icons.edit_rounded,
+                              iconColor: const Color(0xFF3B82F6),
+                              textColor: const Color(0xFF0F172A),
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => EditStopDialog(
+                                    stop: stop,
+                                    routeId: widget.routeId,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -127,15 +168,16 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
               Expanded(
                 child: Consumer<StopsProvider>(
                   builder: (context, provider, _) {
-                    if (provider.isDetailsLoading) {
+                    final stop = provider.singleStop;
+
+                    if (provider.isDetailsLoading ||
+                        (stop != null && stop.id != widget.stopId)) {
                       return const Center(
                         child: CircularProgressIndicator(
                           color: Color(0xFF3B82F6),
                         ),
                       );
                     }
-
-                    final stop = provider.singleStop;
 
                     if (stop == null) {
                       return Center(
@@ -235,6 +277,95 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                             ),
                           ),
                         ),
+
+                        // Import Pair Stops Option (if available)
+                        if (provider.unassignedPairStops.isNotEmpty)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              child: InkWell(
+                                onTap: () async {
+                                  final updated = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AssignPairStopsDialog(
+                                      routeId: widget.routeId,
+                                      currentStopsCount: provider.stops.length,
+                                    ),
+                                  );
+                                  if (updated == true) {
+                                    _loadStopDetails();
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        const Color(0xFF3B82F6).withAlpha(18),
+                                        const Color(0xFF6366F1).withAlpha(18),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xFF3B82F6,
+                                      ).withAlpha(60),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF3B82F6),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.alt_route_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Import Stops from Pair Route',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF0F172A),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${provider.unassignedPairStops.length} unassigned stop(s) available',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: Color(0xFF3B82F6),
+                                        size: 22,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
 
                         // Add Student Button (Clear call-to-action)
                         SliverToBoxAdapter(

@@ -8,6 +8,7 @@ import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
 import 'package:school_bus_tracker/core/utils/common_empty_state.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
+import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/arrived_student_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/edit_completed_stop_students_dialog.dart';
@@ -70,7 +71,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     }
   }
 
-  void _showFinishTripConfirmation(StopsProvider provider) {
+  void _showFinishTripConfirmation(RouteProvider provider) {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -97,12 +98,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(dialogCtx);
-              final success = await provider.updateRouteInActive(
-                routeId: widget.routeId,
-                context: context,
-              );
+              final error = await provider.inactivateRoute(widget.routeId);
               if (!mounted) return;
-              if (success) {
+              if (error == null) {
                 SnackbarHelper.showSuccess(
                   context,
                   message: 'Trip completed successfully!',
@@ -181,9 +179,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 context: context,
                 isScrollControlled: true,
                 builder: (context) {
-                  return StopsManagementBottomsheet(
-                    routeId: widget.routeId,
-                  );
+                  return StopsManagementBottomsheet(routeId: widget.routeId);
                 },
               );
             },
@@ -396,36 +392,33 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final stop = upcomingStops[index];
-                            final studentsCount = stop.students?.length ?? 0;
-                            final priority =
-                                (stop.stopPriority?.isNotEmpty == true
-                                    ? stop.stopPriority!.first.priority
-                                    : stop.priority) ??
-                                (index + 1);
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final stop = upcomingStops[index];
+                          final studentsCount = stop.students?.length ?? 0;
+                          final priority =
+                              (stop.stopPriority?.isNotEmpty == true
+                                  ? stop.stopPriority!.first.priority
+                                  : stop.priority) ??
+                              (index + 1);
 
-                            return StopTile(
-                              stopName: stop.stopName,
-                              priority: priority,
-                              studentsCount: studentsCount,
-                              isCompleted: false,
-                              onTap: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  builder: (context) => StopDetailsBottomsheet(
-                                    stopId: stop.id,
-                                    routeId: widget.routeId,
-                                    isCompleted: false,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          childCount: upcomingStops.length,
-                        ),
+                          return StopTile(
+                            stopName: stop.stopName,
+                            priority: priority,
+                            studentsCount: studentsCount,
+                            isCompleted: false,
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) => StopDetailsBottomsheet(
+                                  stopId: stop.id,
+                                  routeId: widget.routeId,
+                                  isCompleted: false,
+                                ),
+                              );
+                            },
+                          );
+                        }, childCount: upcomingStops.length),
                       ),
                     ),
                   ],
@@ -483,36 +476,33 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final stop = completedStops[index];
-                            final studentsCount = stop.students?.length ?? 0;
-                            final priority =
-                                (stop.stopPriority?.isNotEmpty == true
-                                    ? stop.stopPriority!.first.priority
-                                    : stop.priority) ??
-                                0;
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final stop = completedStops[index];
+                          final studentsCount = stop.students?.length ?? 0;
+                          final priority =
+                              (stop.stopPriority?.isNotEmpty == true
+                                  ? stop.stopPriority!.first.priority
+                                  : stop.priority) ??
+                              0;
 
-                            return StopTile(
-                              stopName: stop.stopName,
-                              priority: priority,
-                              studentsCount: studentsCount,
-                              isCompleted: true,
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) =>
-                                      EditCompletedStopStudentsDialog(
-                                    stop: stop,
-                                    routeId: widget.routeId,
-                                    isPickup: isPickUp,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          childCount: completedStops.length,
-                        ),
+                          return StopTile(
+                            stopName: stop.stopName,
+                            priority: priority,
+                            studentsCount: studentsCount,
+                            isCompleted: true,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    EditCompletedStopStudentsDialog(
+                                      stop: stop,
+                                      routeId: widget.routeId,
+                                      isPickup: isPickUp,
+                                    ),
+                              );
+                            },
+                          );
+                        }, childCount: completedStops.length),
                       ),
                     ),
                   ],
@@ -523,43 +513,53 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 28, 16, 32),
                       child: SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: provider.isInactivatingRoute
-                              ? null
-                              : () => _showFinishTripConfirmation(provider),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFF3B82F6),
-                            foregroundColor: Colors.white,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: provider.isInactivatingRoute
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.check_circle_rounded, size: 20),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Mark Trip as Completed',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
+                        child: Consumer<RouteProvider>(
+                          builder: (context, provider, child) {
+                            return ElevatedButton(
+                              onPressed: provider.isDeactivating
+                                  ? null
+                                  : () => _showFinishTripConfirmation(provider),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
                                 ),
+                                backgroundColor: const Color(0xFF3B82F6),
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              child: provider.isDeactivating
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Mark Trip as Completed',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            );
+                          },
                         ),
                       ),
                     ),

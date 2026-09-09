@@ -9,17 +9,41 @@ import 'package:school_bus_tracker/core/storage/storage_services.dart';
 import 'package:school_bus_tracker/routes/router_config.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
+class _RefreshResult {
+  final String? token;
+  final bool isAuthError;
+
+  const _RefreshResult({this.token, required this.isAuthError});
+}
+
 class AuthInterceptor extends Interceptor {
   final Dio dio;
   final StorageService _storageService = StorageService.instance;
 
-  Completer<String?>? _refreshCompleter;
+  Completer<_RefreshResult>? _refreshCompleter;
 
   AuthInterceptor(this.dio);
 
   bool _isRefreshApi(String path, Uri uri) {
     return path.contains(ApiEndpoints.refreshToken) ||
         uri.path.contains(ApiEndpoints.refreshToken);
+  }
+
+  bool _isNetworkException(dynamic error) {
+    if (error is DioException) {
+      return error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.unknown;
+    }
+    final str = error.toString().toLowerCase();
+    return str.contains('socketexception') ||
+        str.contains('connection refused') ||
+        str.contains('connection error') ||
+        str.contains('network is unreachable') ||
+        str.contains('failed host lookup') ||
+        str.contains('handshakeexception');
   }
 
   @override
@@ -37,14 +61,17 @@ class AuthInterceptor extends Interceptor {
       if (_isTokenExpired(token)) {
         log('ACCESS TOKEN EXPIRED, TRYING REFRESH PRE-EMPTIVELY', name: 'API_SERVICE');
         try {
-          final newToken = await _refreshToken();
-          if (newToken != null && newToken.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $newToken';
-          } else {
+          final result = await _refreshToken();
+          if (result.token != null && result.token!.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer ${result.token}';
+          } else if (result.isAuthError) {
             await _handleForceLogout();
+          } else {
+            // Network failure / offline: keep existing token so request proceeds without wiping login
+            options.headers['Authorization'] = 'Bearer $token';
           }
         } catch (e) {
-          await _handleForceLogout();
+          options.headers['Authorization'] = 'Bearer $token';
         }
       } else {
         options.headers['Authorization'] = 'Bearer $token';
@@ -73,21 +100,22 @@ class AuthInterceptor extends Interceptor {
     if (!isRefresh && response.statusCode == 401) {
       log('401 STATUS RECEIVED IN RESPONSE', name: 'API_SERVICE');
       try {
-        final newToken = await _refreshToken();
+        final result = await _refreshToken();
 
-        if (newToken == null) {
+        if (result.token != null && result.token!.isNotEmpty) {
+          final request = response.requestOptions;
+          request.headers['Authorization'] = 'Bearer ${result.token}';
+
+          final retriedResponse = await dio.fetch(request);
+          return handler.resolve(retriedResponse);
+        } else if (result.isAuthError) {
           await _handleForceLogout();
           return handler.next(response);
+        } else {
+          return handler.next(response);
         }
-
-        final request = response.requestOptions;
-        request.headers['Authorization'] = 'Bearer $newToken';
-
-        final retriedResponse = await dio.fetch(request);
-        return handler.resolve(retriedResponse);
       } catch (e, stack) {
         log('REFRESH FAILED IN ON_RESPONSE', error: e, stackTrace: stack, name: 'API_SERVICE');
-        await _handleForceLogout();
         return handler.next(response);
       }
     }
@@ -112,27 +140,31 @@ class AuthInterceptor extends Interceptor {
     // Prevent infinite loop if refresh API itself fails
     if (isRefresh) {
       log('REFRESH API FAILED', name: 'API_SERVICE');
-      await _handleForceLogout();
+      final statusCode = err.response?.statusCode;
+      if (statusCode == 401 || statusCode == 403) {
+        await _handleForceLogout();
+      }
       return handler.next(err);
     }
 
     if (err.response?.statusCode == 401) {
       try {
-        final newToken = await _refreshToken();
+        final result = await _refreshToken();
 
-        if (newToken == null) {
+        if (result.token != null && result.token!.isNotEmpty) {
+          final request = err.requestOptions;
+          request.headers['Authorization'] = 'Bearer ${result.token}';
+
+          final retriedResponse = await dio.fetch(request);
+          return handler.resolve(retriedResponse);
+        } else if (result.isAuthError) {
           await _handleForceLogout();
           return handler.next(err);
+        } else {
+          return handler.next(err);
         }
-
-        final request = err.requestOptions;
-        request.headers['Authorization'] = 'Bearer $newToken';
-
-        final retriedResponse = await dio.fetch(request);
-        return handler.resolve(retriedResponse);
       } catch (e, stack) {
         log('REFRESH FAILED IN ON_ERROR', error: e, stackTrace: stack, name: 'API_SERVICE');
-        await _handleForceLogout();
         return handler.next(err);
       }
     }
@@ -140,21 +172,22 @@ class AuthInterceptor extends Interceptor {
     handler.next(err);
   }
 
-  Future<String?> _refreshToken() async {
+  Future<_RefreshResult> _refreshToken() async {
     // If a refresh is already in progress, wait for its completion
     if (_refreshCompleter != null) {
       return await _refreshCompleter!.future;
     }
 
-    _refreshCompleter = Completer<String?>();
+    _refreshCompleter = Completer<_RefreshResult>();
 
     try {
       final refreshToken = await _storageService.getRefreshToken();
 
       if (refreshToken == null || refreshToken.isEmpty) {
         log('NO REFRESH TOKEN AVAILABLE', name: 'API_SERVICE');
-        _refreshCompleter!.complete(null);
-        return null;
+        const res = _RefreshResult(token: null, isAuthError: true);
+        _refreshCompleter!.complete(res);
+        return res;
       }
 
       log('CALLING REFRESH TOKEN API', name: 'API_SERVICE');
@@ -175,20 +208,28 @@ class AuthInterceptor extends Interceptor {
           );
 
           log('REFRESH TOKEN SUCCESSFUL', name: 'API_SERVICE');
-          _refreshCompleter!.complete(newAccessToken);
-          return newAccessToken;
+          final res = _RefreshResult(token: newAccessToken, isAuthError: false);
+          _refreshCompleter!.complete(res);
+          return res;
         }
       }
 
-      log('REFRESH API RETURNED NON-OK STATUS', name: 'API_SERVICE');
-      _refreshCompleter!.complete(null);
-      return null;
+      final isAuthError = response.statusCode == 401 ||
+          response.statusCode == 403 ||
+          (response.statusCode != null && response.statusCode! >= 400 && response.statusCode! < 500);
+
+      log('REFRESH API RETURNED STATUS: ${response.statusCode}, isAuthError: $isAuthError', name: 'API_SERVICE');
+      final res = _RefreshResult(token: null, isAuthError: isAuthError);
+      _refreshCompleter!.complete(res);
+      return res;
     } catch (e, stack) {
       log('EXCEPTION DURING TOKEN REFRESH', error: e, stackTrace: stack, name: 'API_SERVICE');
+      final isNetwork = _isNetworkException(e);
+      final res = _RefreshResult(token: null, isAuthError: !isNetwork);
       if (_refreshCompleter != null && !_refreshCompleter!.isCompleted) {
-        _refreshCompleter!.complete(null);
+        _refreshCompleter!.complete(res);
       }
-      return null;
+      return res;
     } finally {
       _refreshCompleter = null;
     }

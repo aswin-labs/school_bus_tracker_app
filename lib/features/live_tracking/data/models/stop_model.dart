@@ -14,7 +14,7 @@ class StopModel {
   List<StopRouteModel>? stopPriority;
 
   StopModel({
-    required this.id,
+    this.id = 0,
     required this.latitude,
     required this.longitude,
     required this.stopName,
@@ -26,7 +26,7 @@ class StopModel {
   });
 
   factory StopModel.fromJson(Map<String, dynamic> json) => StopModel(
-    id: json["id"],
+    id: json["id"] ?? 0,
     latitude: json["latitude"],
     longitude: json["longitude"],
     stopName: json["stop_name"],
