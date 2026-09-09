@@ -124,4 +124,12 @@ class StopServices {
     );
     return response;
   }
+
+  // DELETE stop by id
+  Future<Response> deleteStop({required int stopId}) async {
+    final response = await ApiClient.delete(
+      "${ApiEndpoints.deleteStop}/$stopId",
+    );
+    return response;
+  }
 }

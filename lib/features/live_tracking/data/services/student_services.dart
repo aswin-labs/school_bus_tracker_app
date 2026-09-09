@@ -39,10 +39,10 @@ class StudentServices {
   // delete student from stop
   Future<Response> deleteStudentFromStop({
     required int stopId,
-    required int studentid
+    required int studentId,
   }) async {
     final response = await ApiClient.delete(
-      "${ApiEndpoints.deleteStudentFromStop}/$stopId/$studentid",
+      "${ApiEndpoints.deleteStudentFromStop}/$stopId/$studentId",
     );
     return response;
   }

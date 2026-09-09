@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/services/student_services.dart';
 
@@ -17,9 +18,17 @@ class StudentProvider extends ChangeNotifier {
   Set<int> get selectedStudentIds => _selectedStudentIds;
   bool get isSubmitting => _isSubmitting;
 
+  bool _isDeleting = false;
+  bool get isDeleting => _isDeleting;
+
+  int? _deletingStudentId;
+  int? get deletingStudentId => _deletingStudentId;
+
   // fetch students
-  Future<void> fetchStudentsByRouteId({required int routeId}) async {
+  Future<String?> fetchStudentsByRouteId({required int routeId}) async {
+    _students = [];
     _isLoading = true;
+    notifyListeners();
     try {
       final response = await StudentServices().fetchStudentsByRouteId(
         routeId: routeId,
@@ -29,13 +38,26 @@ class StudentProvider extends ChangeNotifier {
         _students = (response.data['data'] as List<dynamic>)
             .map((result) => StudentModel.fromJson(result))
             .toList();
+        return null;
       }
-    } catch (e) {
-      log(e.toString());
+      return ApiErrorUtils.getErrorMessage(
+        data: response.data,
+        defaultMessage: "Failed to load students",
+        statusCode: response.statusCode,
+      );
+    } catch (e, stackTrace) {
+      log("Fetch students error: $e", stackTrace: stackTrace);
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearStudents() {
+    _students = [];
+    _selectedStudentIds.clear();
+    notifyListeners();
   }
 
   void toggleStudentSelection(int studentId) {
@@ -52,8 +74,8 @@ class StudentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addSelectedStudentsToStop(int stopId) async {
-    if (_selectedStudentIds.isEmpty) return false;
+  Future<String?> addSelectedStudentsToStop(int stopId) async {
+    if (_selectedStudentIds.isEmpty) return 'No students selected';
 
     _isSubmitting = true;
     notifyListeners();
@@ -66,13 +88,18 @@ class StudentProvider extends ChangeNotifier {
       log("Selected student IDs: ${_selectedStudentIds.toList()}");
       log("Add students to stop response: ${response.data} ");
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         _selectedStudentIds.clear();
-        return true;
+        return null;
       }
-      return false;
-    } catch (e) {
-      return false;
+      return ApiErrorUtils.getErrorMessage(
+        data: response.data,
+        defaultMessage: "Failed to add students to stop",
+        statusCode: response.statusCode,
+      );
+    } catch (e, stackTrace) {
+      log("Add students to stop error: $e", stackTrace: stackTrace);
+      return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _isSubmitting = false;
       notifyListeners();
@@ -105,6 +132,41 @@ class StudentProvider extends ChangeNotifier {
       return false;
     } finally {
       _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  // delete student from stop
+  Future<String?> deleteStudentFromStop({
+    required int stopId,
+    required int studentId,
+  }) async {
+    _isDeleting = true;
+    _deletingStudentId = studentId;
+    notifyListeners();
+
+    try {
+      final response = await StudentServices().deleteStudentFromStop(
+        stopId: stopId,
+        studentId: studentId,
+      );
+
+      log("Delete student from stop response: ${response.data}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return null;
+      }
+      return ApiErrorUtils.getErrorMessage(
+        data: response.data,
+        defaultMessage: "Failed to remove student from stop",
+        statusCode: response.statusCode,
+      );
+    } catch (e, stackTrace) {
+      log("Delete student from stop error: $e", stackTrace: stackTrace);
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _isDeleting = false;
+      _deletingStudentId = null;
       notifyListeners();
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_live_status_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
@@ -91,8 +92,8 @@ class _EditCompletedStopStudentsDialogState
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final actionColor = widget.isPickup
-        ? const Color(0xFF10B981)
-        : const Color(0xFF3B82F6);
+        ? AppColors.pickupColor
+        : AppColors.dropColor;
     final presentLabel = widget.isPickup ? 'Picked' : 'Dropped';
     final absentLabel = widget.isPickup ? 'Not Picked' : 'Not Dropped';
 
@@ -102,7 +103,7 @@ class _EditCompletedStopStudentsDialogState
       child: Container(
         constraints: BoxConstraints(maxHeight: height * 0.78, maxWidth: 440),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -191,7 +192,7 @@ class _EditCompletedStopStudentsDialogState
               decoration: BoxDecoration(
                 color: actionColor.withAlpha(15),
                 border: const Border(
-                  bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                  bottom: BorderSide(color: AppColors.divider, width: 1),
                 ),
               ),
               child: Row(
@@ -212,10 +213,10 @@ class _EditCompletedStopStudentsDialogState
                   Expanded(
                     child: Text(
                       'Tap on a student to switch between $presentLabel and $absentLabel.',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -231,7 +232,7 @@ class _EditCompletedStopStudentsDialogState
                       stopsProvider.singleStop == null) {
                     return const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.primary,
                       ),
                     );
                   }
@@ -241,7 +242,7 @@ class _EditCompletedStopStudentsDialogState
                   // Build status map from live statuses
                   final Map<int, StudentsStopStatus> statusMap = {};
                   if (activeStop.stopLiveStatuses != null &&
-                      activeStop.stopLiveStatuses!.isNotEmpty) {
+                       activeStop.stopLiveStatuses!.isNotEmpty) {
                     for (final liveStatus in activeStop.stopLiveStatuses!) {
                       if (liveStatus.studentsStopStatuses != null) {
                         for (final sss in liveStatus.studentsStopStatuses!) {
@@ -276,14 +277,14 @@ class _EditCompletedStopStudentsDialogState
                           Icon(
                             Icons.people_outline_rounded,
                             size: 48,
-                            color: Colors.grey[300],
+                            color: AppColors.textDisabled,
                           ),
                           const SizedBox(height: 12),
-                          Text(
+                          const Text(
                             'No students found for this stop',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[400],
+                              color: AppColors.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -310,13 +311,7 @@ class _EditCompletedStopStudentsDialogState
                     }
                   }
 
-                  const avatarColors = [
-                    [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                    [Color(0xFFF59E0B), Color(0xFFF97316)],
-                    [Color(0xFF10B981), Color(0xFF059669)],
-                    [Color(0xFFEC4899), Color(0xFFEF4444)],
-                  ];
+                  final avatarColors = AppColors.avatarColorPairs;
 
                   return Column(
                     children: [
@@ -327,10 +322,10 @@ class _EditCompletedStopStudentsDialogState
                           vertical: 10,
                         ),
                         decoration: const BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           border: Border(
                             bottom: BorderSide(
-                              color: Color(0xFFE2E8F0),
+                              color: AppColors.divider,
                               width: 1,
                             ),
                           ),
@@ -351,7 +346,7 @@ class _EditCompletedStopStudentsDialogState
                               icon: Icons.cancel_outlined,
                               label: absentLabel,
                               count: absentCount,
-                              color: const Color(0xFFEF4444),
+                              color: AppColors.error,
                             ),
                           ],
                         ),
@@ -399,12 +394,12 @@ class _EditCompletedStopStudentsDialogState
                                 padding: const EdgeInsets.all(13),
                                 decoration: BoxDecoration(
                                   color: isAbsent
-                                      ? const Color(0xFFEF4444).withAlpha(12)
+                                      ? AppColors.error.withAlpha(12)
                                       : actionColor.withAlpha(12),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: isAbsent
-                                        ? const Color(0xFFEF4444).withAlpha(70)
+                                        ? AppColors.error.withAlpha(70)
                                         : actionColor.withAlpha(60),
                                     width: isAbsent ? 2 : 1.5,
                                   ),
@@ -448,8 +443,8 @@ class _EditCompletedStopStudentsDialogState
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
                                               color: isAbsent
-                                                  ? Colors.grey[600]
-                                                  : const Color(0xFF0F172A),
+                                                  ? AppColors.textSecondary
+                                                  : AppColors.textPrimary,
                                               decoration: isAbsent
                                                   ? TextDecoration.lineThrough
                                                   : null,
@@ -463,17 +458,17 @@ class _EditCompletedStopStudentsDialogState
                                               Icon(
                                                 Icons.person_outline_rounded,
                                                 size: 12,
-                                                color: Colors.grey[400],
+                                                color: AppColors.textDisabled,
                                               ),
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
                                                   student.user?.name ??
                                                       'Not mentioned',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w500,
-                                                    color: Colors.grey[500],
+                                                    color: AppColors.textSecondary,
                                                   ),
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -494,16 +489,14 @@ class _EditCompletedStopStudentsDialogState
                                       ),
                                       decoration: BoxDecoration(
                                         color: isAbsent
-                                            ? const Color(0xFFEF4444)
+                                            ? AppColors.error
                                             : actionColor,
                                         borderRadius: BorderRadius.circular(10),
                                         boxShadow: [
                                           BoxShadow(
                                             color:
                                                 (isAbsent
-                                                        ? const Color(
-                                                            0xFFEF4444,
-                                                          )
+                                                        ? AppColors.error
                                                         : actionColor)
                                                     .withAlpha(40),
                                             blurRadius: 8,

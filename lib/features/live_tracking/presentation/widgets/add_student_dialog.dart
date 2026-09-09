@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
 
@@ -22,9 +24,20 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   void initState() {
     super.initState();
 
-    final studentProvider = context.read<StudentProvider>();
-    studentProvider.clearSelection();
-    studentProvider.fetchStudentsByRouteId(routeId: widget.routeId);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final error = await context
+          .read<StudentProvider>()
+          .fetchStudentsByRouteId(routeId: widget.routeId);
+      if (mounted && error != null) {
+        SnackbarHelper.showError(context, message: error);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -37,7 +50,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
       child: Container(
         constraints: BoxConstraints(maxHeight: height * 0.75, maxWidth: 440),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -53,11 +66,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                ),
+                gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(28),
                   topRight: Radius.circular(28),
@@ -120,11 +129,11 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
 
                 return Container(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-                  decoration: const BoxDecoration(
-                    color: Color(0x1F3B82F6),
-                    border: Border(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(15),
+                    border: const Border(
                       bottom: BorderSide(
-                        color: Color(0xFFE2E8F0),
+                        color: AppColors.divider,
                         width: 1,
                       ),
                     ),
@@ -135,7 +144,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                         width: 3,
                         height: 16,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6),
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -145,7 +154,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -156,10 +165,10 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withAlpha(20),
+                          color: AppColors.primary.withAlpha(20),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: const Color(0xFF3B82F6).withAlpha(60),
+                            color: AppColors.primary.withAlpha(60),
                             width: 1,
                           ),
                         ),
@@ -168,7 +177,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF3B82F6),
+                            color: AppColors.primary,
                             letterSpacing: 0.3,
                           ),
                         ),
@@ -188,37 +197,37 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                   if (provider.isLoading) {
                     return const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.primary,
                       ),
                     );
                   }
 
                   if (availableStudents.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check_circle_outline_rounded,
                             size: 48,
-                            color: Color(0xFF10B981),
+                            color: AppColors.success,
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             'All students added',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             'No more students to add',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[500],
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -226,13 +235,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                     );
                   }
 
-                  const avatarColors = [
-                    [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                    [Color(0xFFF59E0B), Color(0xFFF97316)],
-                    [Color(0xFF10B981), Color(0xFF059669)],
-                    [Color(0xFFEC4899), Color(0xFFEF4444)],
-                  ];
+                  final avatarColors = AppColors.avatarColorPairs;
 
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -245,7 +248,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
 
                       final colorPair =
                           avatarColors[index % avatarColors.length];
-                      const accentColor = Color(0xFF3B82F6);
+                      const accentColor = AppColors.primary;
 
                       final initials = (student.fullName)
                           .trim()
@@ -265,12 +268,12 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? accentColor.withAlpha(15)
-                                : const Color(0xFFF8FAFC),
+                                : AppColors.cardBg,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
                                   ? accentColor.withAlpha(80)
-                                  : const Color(0xFFE2E8F0),
+                                  : AppColors.border,
                               width: isSelected ? 2 : 1,
                             ),
                             boxShadow: isSelected
@@ -326,7 +329,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                                         fontWeight: FontWeight.w600,
                                         color: isSelected
                                             ? accentColor
-                                            : const Color(0xFF0F172A),
+                                            : AppColors.textPrimary,
                                         letterSpacing: 0.1,
                                       ),
                                     ),
@@ -336,17 +339,17 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                                         Icon(
                                           Icons.person_outline_rounded,
                                           size: 12,
-                                          color: Colors.grey[400],
+                                          color: AppColors.textDisabled,
                                         ),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
                                             student.user?.name ??
                                                 'Not mentioned',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.grey[500],
+                                              color: AppColors.textSecondary,
                                               letterSpacing: 0.1,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -370,7 +373,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                                   border: Border.all(
                                     color: isSelected
                                         ? accentColor
-                                        : Colors.grey[300]!,
+                                        : AppColors.border,
                                     width: 2,
                                   ),
                                   color: isSelected
@@ -415,29 +418,41 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                       onPressed: isDisabled
                           ? null
                           : () async {
-                              final success = await provider
+                              final error = await provider
                                   .addSelectedStudentsToStop(widget.stopId);
                               if (!context.mounted) return;
-                              await context
-                                  .read<StopsProvider>()
-                                  .fetchSingleStop(
-                                    routeId: widget.routeId,
-                                    stopId: widget.stopId,
-                                  );
-                              if (!context.mounted) return;
-                              await context
-                                  .read<StopsProvider>()
-                                  .fetchStopsByRouteId(widget.routeId);
 
-                              if (success && context.mounted) {
-                                Navigator.pop(context);
+                              if (error == null) {
+                                SnackbarHelper.showSuccess(
+                                  context,
+                                  message: 'Student(s) added successfully',
+                                );
+                                await context
+                                    .read<StopsProvider>()
+                                    .fetchSingleStop(
+                                      routeId: widget.routeId,
+                                      stopId: widget.stopId,
+                                    );
+                                if (!context.mounted) return;
+                                await context
+                                    .read<StopsProvider>()
+                                    .fetchStopsByRouteId(widget.routeId);
+
+                                if (context.mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              } else {
+                                SnackbarHelper.showError(
+                                  context,
+                                  message: error,
+                                );
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B82F6),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey[300],
-                        disabledForegroundColor: Colors.grey[500],
+                        disabledBackgroundColor: AppColors.border,
+                        disabledForegroundColor: AppColors.textDisabled,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(

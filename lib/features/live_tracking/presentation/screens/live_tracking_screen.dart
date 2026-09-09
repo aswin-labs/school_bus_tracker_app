@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/common_empty_state.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
@@ -75,25 +76,30 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.flag_rounded, color: Color(0xFF3B82F6)),
+            Icon(Icons.flag_rounded, color: AppColors.primary),
             SizedBox(width: 10),
             Text(
               'Complete Trip?',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: AppColors.textPrimary,
+              ),
             ),
           ],
         ),
         content: const Text(
           'Are you sure you want to mark this route as completed? This will inactivate the active trip.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF475569)),
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -114,7 +120,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B82F6),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -152,8 +158,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
                       color: provider.isPickup
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFF3B82F6),
+                          ? AppColors.pickupColor
+                          : AppColors.dropColor,
                     ),
                   ),
               ],
@@ -209,7 +215,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             if (provider.stops.isEmpty) {
               return RefreshIndicator(
                 onRefresh: _loadStops,
-                color: Colors.black,
+                color: AppColors.primary,
                 child: ListView(
                   children: [
                     SizedBox(height: 20.hp),
@@ -231,7 +237,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
 
             return RefreshIndicator(
               onRefresh: _loadStops,
-              color: Colors.black,
+              color: AppColors.primary,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
@@ -282,12 +288,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFF10B981), Color(0xFF059669)],
+                              colors: [AppColors.pickupColor, AppColors.pickupColorDark],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF10B981).withAlpha(40),
+                                color: AppColors.pickupColor.withAlpha(40),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6),
                               ),
@@ -350,7 +356,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                               width: 3.5,
                               height: 16,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6),
+                                color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -360,7 +366,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
+                                color: AppColors.textPrimary,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -371,7 +377,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6).withAlpha(20),
+                                color: AppColors.primary.withAlpha(20),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -379,7 +385,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF3B82F6),
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -434,7 +440,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                               width: 3.5,
                               height: 16,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981),
+                                color: AppColors.pickupColor,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -444,7 +450,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
+                                color: AppColors.textPrimary,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -455,7 +461,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withAlpha(20),
+                                color: AppColors.pickupColor.withAlpha(20),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -463,7 +469,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF10B981),
+                                  color: AppColors.pickupColor,
                                 ),
                               ),
                             ),
@@ -523,7 +529,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
-                                backgroundColor: const Color(0xFF3B82F6),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 2,
                                 shape: RoundedRectangleBorder(

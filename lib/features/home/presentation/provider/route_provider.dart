@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/data/services/route_services.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class RouteProvider extends ChangeNotifier {
@@ -27,8 +28,14 @@ class RouteProvider extends ChangeNotifier {
   bool _isDeactivating = false;
   bool get isDeactivating => _isDeactivating;
 
+  bool _isLoadingStudents = false;
+  bool get isLoadingStudents => _isLoadingStudents;
+
   List<RouteModel> _routes = [];
   List<RouteModel> get driverRoutes => _routes;
+
+  List<StudentModel> _routeStudents = [];
+  List<StudentModel> get routeStudents => _routeStudents;
 
   // ---------------------------------------------------------------------------
   // Loading helpers
@@ -164,6 +171,60 @@ class RouteProvider extends ChangeNotifier {
       return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setDeactivating(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Students by Route
+  // ---------------------------------------------------------------------------
+
+  void clearRouteStudents() {
+    _routeStudents = [];
+    notifyListeners();
+  }
+
+  Future<String?> fetchStudentsByRouteId(int routeId) async {
+    _isLoadingStudents = true;
+    _routeStudents = [];
+    notifyListeners();
+
+    try {
+      final response = await _routeServices.fetchStudentsByRouteId(routeId);
+
+      log('Fetch route students response: ${response.data}');
+
+      if (response.statusCode != 200) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to fetch students',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final rawData = response.data['data'] ?? response.data['students'] ?? response.data;
+
+      if (rawData is! List) {
+        _routeStudents = [];
+        notifyListeners();
+        return null;
+      }
+
+      _routeStudents = rawData
+          .map<StudentModel>((json) => StudentModel.fromJson(json))
+          .toList();
+
+      notifyListeners();
+
+      log('Fetched route students: ${_routeStudents.length}');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Fetch route students error: $e', stackTrace: stackTrace);
+
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _isLoadingStudents = false;
+      notifyListeners();
     }
   }
 }

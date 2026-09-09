@@ -21,4 +21,11 @@ class RouteServices {
       "route_id": routeId,
     });
   }
+
+  // GET students by routeId
+  Future<Response> fetchStudentsByRouteId(int routeId) async {
+    return await ApiClient.get(
+      "${ApiEndpoints.getStudentsByRouteId}/$routeId",
+    );
+  }
 }

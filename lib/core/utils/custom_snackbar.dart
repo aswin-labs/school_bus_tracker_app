@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 /// Custom Snackbar with modern design
 ///
@@ -134,13 +135,13 @@ class _CustomSnackbarWidgetState extends State<_CustomSnackbarWidget>
   Color _getColor() {
     switch (widget.type) {
       case SnackbarType.success:
-        return const Color(0xFF10B981);
+        return AppColors.success;
       case SnackbarType.error:
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case SnackbarType.warning:
-        return const Color(0xFFF59E0B);
+        return AppColors.warning;
       case SnackbarType.info:
-        return const Color(0xFF3B82F6);
+        return AppColors.info;
     }
   }
 
@@ -175,7 +176,7 @@ class _CustomSnackbarWidgetState extends State<_CustomSnackbarWidget>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: color.withAlpha(100), width: 2),
                   boxShadow: [
@@ -210,7 +211,7 @@ class _CustomSnackbarWidgetState extends State<_CustomSnackbarWidget>
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                           letterSpacing: 0.1,
                           height: 1.4,
                         ),

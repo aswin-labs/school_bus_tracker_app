@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
@@ -131,7 +132,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 36),
       child: Material(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         elevation: 16,
@@ -145,11 +146,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                  ),
+                  gradient: AppColors.primaryGradient,
                 ),
                 child: Row(
                   children: [
@@ -206,7 +203,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                     if (provider.isLoadingPairStops) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF3B82F6),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -223,31 +220,31 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6).withAlpha(15),
+                                  color: AppColors.primary.withAlpha(15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.check_circle_outline_rounded,
                                   size: 48,
-                                  color: Color(0xFF3B82F6),
+                                  color: AppColors.primary,
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Text(
+                              const Text(
                                 'No Unassigned Stops',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.grey[800],
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text(
+                              const Text(
                                 'All stops from the paired route are already assigned to this route.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey[500],
+                                  color: AppColors.textMuted,
                                   height: 1.4,
                                 ),
                               ),
@@ -282,7 +279,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                         width: 20,
                                         child: Checkbox(
                                           value: allSelected,
-                                          activeColor: const Color(0xFF3B82F6),
+                                          activeColor: AppColors.primary,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               4,
@@ -300,7 +297,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: Color(0xFF334155),
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ],
@@ -314,7 +311,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6).withAlpha(15),
+                                  color: AppColors.primary.withAlpha(15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -322,7 +319,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                   style: const TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -332,7 +329,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                         const Divider(
                           height: 12,
                           thickness: 1,
-                          color: Color(0xFFF1F5F9),
+                          color: AppColors.divider,
                         ),
 
                         // Stops list
@@ -367,13 +364,13 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? const Color(0xFF3B82F6).withAlpha(10)
-                                      : const Color(0xFFF8FAFC),
+                                      ? AppColors.primary.withAlpha(10)
+                                      : AppColors.cardBg,
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
                                     color: isSelected
-                                        ? const Color(0xFF3B82F6).withAlpha(80)
-                                        : const Color(0xFFE2E8F0),
+                                        ? AppColors.primary.withAlpha(80)
+                                        : AppColors.border,
                                     width: isSelected ? 1.5 : 1,
                                   ),
                                 ),
@@ -384,7 +381,7 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                       height: 24,
                                       child: Checkbox(
                                         value: isSelected,
-                                        activeColor: const Color(0xFF3B82F6),
+                                        activeColor: AppColors.primary,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             4,
@@ -413,8 +410,8 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
                                               color: isSelected
-                                                  ? const Color(0xFF0F172A)
-                                                  : const Color(0xFF64748B),
+                                                  ? AppColors.textPrimary
+                                                  : AppColors.textSecondary,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -425,9 +422,9 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                             ),
                                             child: Text(
                                               '${stop.latitude.toStringAsFixed(4)}, ${stop.longitude.toStringAsFixed(4)}',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 11,
-                                                color: Colors.grey[500],
+                                                color: AppColors.textMuted,
                                               ),
                                             ),
                                           ),
@@ -440,12 +437,12 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.end,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'Priority',
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.grey[500],
+                                            color: AppColors.textMuted,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -454,16 +451,14 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                           height: 34,
                                           alignment: Alignment.center,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: AppColors.surface,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                             border: Border.all(
                                               color: isSelected
-                                                  ? const Color(
-                                                      0xFF3B82F6,
-                                                    ).withAlpha(120)
-                                                  : const Color(0xFFCBD5E1),
+                                                  ? AppColors.primary.withAlpha(120)
+                                                  : AppColors.border,
                                               width: 1,
                                             ),
                                           ),
@@ -476,8 +471,8 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                               fontSize: 13,
                                               fontWeight: FontWeight.w700,
                                               color: isSelected
-                                                  ? const Color(0xFF0F172A)
-                                                  : Colors.grey[400],
+                                                  ? AppColors.textPrimary
+                                                  : AppColors.textDisabled,
                                             ),
                                             decoration: const InputDecoration(
                                               isDense: true,
@@ -529,9 +524,9 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       border: Border(
-                        top: BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+                        top: BorderSide(color: AppColors.divider, width: 1.5),
                       ),
                     ),
                     child: Row(
@@ -542,8 +537,8 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                 ? null
                                 : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF64748B),
-                              side: const BorderSide(color: Color(0xFFCBD5E1)),
+                              foregroundColor: AppColors.textSecondary,
+                              side: const BorderSide(color: AppColors.border),
                               padding: const EdgeInsets.symmetric(vertical: 13),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -568,9 +563,9 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                 ? null
                                 : () => _handleSubmit(routeProvider),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              disabledBackgroundColor: Colors.grey[300],
+                              disabledBackgroundColor: AppColors.border,
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 13),
                               shape: RoundedRectangleBorder(

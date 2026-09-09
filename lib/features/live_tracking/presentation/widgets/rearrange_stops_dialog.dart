@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
@@ -83,6 +84,7 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
     final isLoading = context.watch<StopsProvider>().isRearranging;
 
     return Dialog(
+      backgroundColor: AppColors.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
@@ -100,6 +102,7 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -107,7 +110,7 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
                     onPressed: isLoading
                         ? null
                         : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -118,7 +121,7 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Drag the stops to change their priority.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
               ),
 
@@ -147,11 +150,11 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
 
                     return Container(
                       key: ValueKey(stop.id),
-                      margin: const EdgeInsets.only(bottom: 4),
+                      margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: AppColors.cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: ListTile(
                         leading: Container(
@@ -159,35 +162,36 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
                           height: 34,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withAlpha(20),
+                            color: AppColors.primary.withAlpha(20),
                             shape: BoxShape.circle,
                           ),
                           child: Text(
                             '${index + 1}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
                         title: Text(
                           stop.stopName,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                         subtitle: Text(
                           'Priority ${index + 1}',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: AppColors.textMuted,
                           ),
                         ),
                         trailing: ReorderableDragStartListener(
                           index: index,
                           child: const Icon(
                             Icons.drag_indicator,
-                            color: Colors.grey,
+                            color: AppColors.textDisabled,
                           ),
                         ),
                       ),
@@ -198,15 +202,14 @@ class _RearrangeStopsDialogState extends State<RearrangeStopsDialog> {
 
               const SizedBox(height: 12),
 
-              // AddButton(onPressed: () {}, buttonText: "buttonText"),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFBFDBFE),
+                    disabledBackgroundColor: AppColors.border,
                     disabledForegroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),

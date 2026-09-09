@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/tracking/data/services/stop_services.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
@@ -97,7 +98,7 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
       child: Container(
         constraints: BoxConstraints(maxHeight: height * 0.7, maxWidth: 440),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -116,7 +117,7 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  colors: AppColors.primaryColors,
                 ),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(28),
@@ -174,10 +175,10 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
               decoration: BoxDecoration(
                 color: isReorderMode
-                    ? const Color(0xFFF59E0B).withAlpha(12)
-                    : const Color(0xFF3B82F6).withAlpha(12),
-                border: Border(
-                  bottom: BorderSide(color: const Color(0xFFE2E8F0), width: 1),
+                    ? AppColors.warning.withAlpha(12)
+                    : AppColors.primary.withAlpha(12),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.border, width: 1),
                 ),
               ),
               child: Row(
@@ -186,8 +187,8 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: isReorderMode
-                          ? const Color(0xFFF59E0B).withAlpha(30)
-                          : const Color(0xFF3B82F6).withAlpha(30),
+                          ? AppColors.warning.withAlpha(30)
+                          : AppColors.primary.withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -196,8 +197,8 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                           : Icons.info_outline_rounded,
                       size: 16,
                       color: isReorderMode
-                          ? const Color(0xFFF59E0B)
-                          : const Color(0xFF3B82F6),
+                          ? AppColors.warning
+                          : AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -206,10 +207,10 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                       isReorderMode
                           ? 'Drag and drop stops to reorder'
                           : 'Stops will be created in reverse order of pickup route',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.3,
                       ),
                     ),
@@ -227,17 +228,17 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                     width: 3,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  const Text(
                     'Drop Stops Order',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                      color: AppColors.textPrimary,
                       letterSpacing: 0.2,
                     ),
                   ),
@@ -256,13 +257,13 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                       ),
                       decoration: BoxDecoration(
                         color: isReorderMode
-                            ? const Color(0xFFF59E0B).withAlpha(20)
-                            : const Color(0xFF3B82F6).withAlpha(20),
+                            ? AppColors.warning.withAlpha(20)
+                            : AppColors.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isReorderMode
-                              ? const Color(0xFFF59E0B).withAlpha(60)
-                              : const Color(0xFF3B82F6).withAlpha(60),
+                              ? AppColors.warning.withAlpha(60)
+                              : AppColors.primary.withAlpha(60),
                           width: 1,
                         ),
                       ),
@@ -275,8 +276,8 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                                 : Icons.swap_vert_rounded,
                             size: 14,
                             color: isReorderMode
-                                ? const Color(0xFFF59E0B)
-                                : const Color(0xFF3B82F6),
+                                ? AppColors.warning
+                                : AppColors.primary,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -285,8 +286,8 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: isReorderMode
-                                  ? const Color(0xFFF59E0B)
-                                  : const Color(0xFF3B82F6),
+                                  ? AppColors.warning
+                                  : AppColors.primary,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -303,7 +304,7 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
               child: isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.primary,
                       ),
                     )
                   : reversedStops.isEmpty
@@ -314,14 +315,14 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                           Icon(
                             Icons.route_outlined,
                             size: 48,
-                            color: Colors.grey[300],
+                            color: AppColors.textDisabled,
                           ),
                           const SizedBox(height: 12),
-                          Text(
+                          const Text(
                             'No stops found',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[400],
+                              color: AppColors.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -383,9 +384,9 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                           ? null
                           : () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF64748B),
-                        side: BorderSide(
-                          color: const Color(0xFFE2E8F0),
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(
+                          color: AppColors.border,
                           width: 1.5,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -413,9 +414,9 @@ class _DropStopsPreviewDialogState extends State<DropStopsPreviewDialog> {
                           ? null
                           : _confirm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B82F6),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey[300],
+                        disabledBackgroundColor: AppColors.border,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -481,13 +482,13 @@ class _StopCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isReorderMode
-            ? const Color(0xFFFEF3C7)
-            : const Color(0xFFF8FAFC),
+            ? AppColors.warning.withAlpha(20)
+            : AppColors.inputBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isReorderMode
-              ? const Color(0xFFF59E0B).withAlpha(80)
-              : const Color(0xFFE2E8F0),
+              ? AppColors.warning.withAlpha(80)
+              : AppColors.border,
           width: isReorderMode ? 1.5 : 1,
         ),
       ),
@@ -502,8 +503,8 @@ class _StopCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isReorderMode
-                    ? [const Color(0xFFF59E0B), const Color(0xFFF97316)]
-                    : [const Color(0xFF3B82F6), const Color(0xFF2563EB)],
+                    ? [AppColors.warning, AppColors.dropColor]
+                    : AppColors.primaryColors,
               ),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -529,7 +530,7 @@ class _StopCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.textPrimary,
                     letterSpacing: 0.1,
                   ),
                   maxLines: 1,
@@ -541,15 +542,15 @@ class _StopCard extends StatelessWidget {
                     Icon(
                       Icons.people_alt_rounded,
                       size: 12,
-                      color: Colors.grey[400],
+                      color: AppColors.textDisabled,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${stop.students?.length ?? 0} students',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[500],
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -559,9 +560,9 @@ class _StopCard extends StatelessWidget {
           ),
           // Drag handle (only in reorder mode)
           if (isReorderMode)
-            Icon(
+            const Icon(
               Icons.drag_indicator_rounded,
-              color: const Color(0xFFF59E0B),
+              color: AppColors.warning,
               size: 24,
             ),
         ],

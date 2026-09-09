@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class StudentsInStopDialog extends StatefulWidget {
@@ -37,7 +38,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 380),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -54,14 +55,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
             Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 12, 14),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF3B82F6),
-                    Color(0xFF2563EB),
-                  ],
-                ),
+                gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -148,7 +142,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                     width: 3,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withAlpha(12),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -161,14 +155,14 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                           letterSpacing: 0.2,
                         ),
                       );
                     },
                   ),
                   const Spacer(),
-                  // Indigo count pill
+                  // Accent count pill
                   Consumer<StopsProvider>(
                     builder: (context, provider, _) {
                       final count = provider.students.length;
@@ -178,10 +172,10 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withAlpha(15),
+                          color: AppColors.accent.withAlpha(15),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: const Color(0xFF6366F1).withAlpha(40),
+                            color: AppColors.accent.withAlpha(40),
                             width: 1,
                           ),
                         ),
@@ -191,7 +185,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                             const Icon(
                               Icons.people_alt_rounded,
                               size: 13,
-                              color: Color(0xFF6366F1),
+                              color: AppColors.accent,
                             ),
                             const SizedBox(width: 5),
                             Text(
@@ -199,7 +193,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF6366F1),
+                                color: AppColors.accent,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -218,7 +212,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: Color(0xFFE2E8F0),
+                color: AppColors.divider,
               ),
             ),
 
@@ -231,7 +225,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                   if (provider.isDetailsLoading) {
                     return const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.primary,
                       ),
                     );
                   }
@@ -244,14 +238,14 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                           Icon(
                             Icons.people_outline_rounded,
                             size: 36,
-                            color: Colors.grey[300],
+                            color: AppColors.textDisabled,
                           ),
                           const SizedBox(height: 10),
-                          Text(
+                          const Text(
                             'No students at this stop',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[400],
+                              color: AppColors.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -260,13 +254,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                     );
                   }
 
-                  const avatarColors = [
-                    [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                    [Color(0xFFF59E0B), Color(0xFFF97316)],
-                    [Color(0xFF00D9A3), Color(0xFF0EA5E9)],
-                    [Color(0xFFEC4899), Color(0xFFEF4444)],
-                  ];
+                  final avatarColors = AppColors.avatarColorPairs;
 
                   return ListView.separated(
                     shrinkWrap: true,
@@ -291,10 +279,10 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppColors.cardBg,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                            color: AppColors.border,
                             width: 1,
                           ),
                         ),
@@ -335,7 +323,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                                     style: const TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0F172A),
+                                      color: AppColors.textPrimary,
                                       letterSpacing: 0.1,
                                     ),
                                     overflow: TextOverflow.ellipsis,
@@ -346,16 +334,16 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                                       Icon(
                                         Icons.person_outline_rounded,
                                         size: 12,
-                                        color: Colors.grey[400],
+                                        color: AppColors.textDisabled,
                                       ),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           student.user?.name ?? '',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.w500,
-                                            color: Colors.grey[500],
+                                            color: AppColors.textSecondary,
                                             letterSpacing: 0.1,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -407,7 +395,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

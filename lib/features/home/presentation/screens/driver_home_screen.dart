@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/common_empty_state.dart';
 import 'package:school_bus_tracker/core/utils/date_time_helpers.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
@@ -12,9 +13,9 @@ import 'package:school_bus_tracker/features/home/presentation/provider/route_pro
 import 'package:school_bus_tracker/features/home/presentation/widgets/driver_route_card.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/drop_stop_preview_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/resume_trip_dialog.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/route_students_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/start_journey_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stops_management_bottomsheet.dart';
-import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_stop_dialog.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -201,10 +202,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
+  // show route students dialog
+  void _showRouteStudentsDialog(RouteModel route) {
+    showDialog(
+      context: context,
+      builder: (_) => RouteStudentsDialog(
+        routeId: route.id,
+        routeName: route.routeName ?? 'Route Students',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: context.theme.canvasColor,
@@ -215,7 +227,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -233,9 +245,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     getCurrentDate(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -255,7 +267,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               onPressed: () =>
                   context.pushNamed(RouterConstants.settingsScreen),
               icon: const Icon(Icons.settings_outlined),
-              color: context.theme.dividerColor,
+              color: context.theme.iconTheme.color,
             ),
           ),
         ],
@@ -268,7 +280,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             builder: (context, provider, _) {
               return RefreshIndicator(
                 onRefresh: _loadRoutes,
-                color: Colors.black,
+                color: AppColors.primary,
                 child: CustomScrollView(
                   slivers: [
                     // Stats Section
@@ -280,17 +292,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                            colors: AppColors.primaryColors,
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Color.fromARGB(
-                                255,
-                                162,
-                                189,
-                                233,
-                              ).withAlpha(20),
+                              color: AppColors.primary.withAlpha(20),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -371,22 +378,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           return DriverRouteCard(
                             routeName: route.routeName ?? "Unknown Route",
                             totalStops: route.totalStops ?? 0,
+                            totalStudents: route.totalStudents ?? 0,
+                            onStudentsTap: () =>
+                                _showRouteStudentsDialog(route),
                             onStopsTap: () {
-                              route.totalStops == 0
-                                  ? showDialog(
-                                      context: context,
-                                      builder: (_) =>
-                                          AddStopDialog(routeId: route.id),
-                                    )
-                                  : showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      builder: (context) {
-                                        return StopsManagementBottomsheet(
-                                          routeId: route.id,
-                                        );
-                                      },
-                                    );
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return StopsManagementBottomsheet(
+                                    routeId: route.id,
+                                  );
+                                },
+                              );
                             },
                             isLive: isLive,
                             isPickup: isPickup,

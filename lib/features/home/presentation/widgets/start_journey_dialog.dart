@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class StartJourneyDialog extends StatefulWidget {
   final VoidCallback onStart;
@@ -56,17 +57,17 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // Header with gradient background
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                    colors: AppColors.primaryColors,
                   ),
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
                   ),
@@ -128,7 +129,7 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
                         ],
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     // Buttons
                     Row(
                       children: [
@@ -139,8 +140,8 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
                                 : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(
-                                color: Colors.grey[300]!,
+                              side: const BorderSide(
+                                color: AppColors.border,
                                 width: 1.5,
                               ),
                               shape: RoundedRectangleBorder(
@@ -150,7 +151,7 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
                             child: const Text(
                               "Cancel",
                               style: TextStyle(
-                                color: Color(0xFF6B7280),
+                                color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
                               ),
@@ -162,11 +163,10 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
                           child: ElevatedButton(
                             onPressed: widget.isLoading ? null : widget.onStart,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(
-                                0xFF3B82F6,
-                              ).withAlpha(128),
+                              disabledBackgroundColor: AppColors.primary
+                                  .withAlpha(128),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
@@ -218,10 +218,10 @@ class _StartJourneyDialogState extends State<StartJourneyDialog>
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withAlpha(26),
+            color: AppColors.primary.withAlpha(26),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+          child: Icon(icon, size: 16, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
         Expanded(

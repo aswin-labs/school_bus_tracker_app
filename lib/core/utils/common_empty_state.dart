@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 
 class CommonEmptyState extends StatelessWidget {
   final IconData icon;
@@ -21,7 +22,7 @@ class CommonEmptyState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -34,7 +35,7 @@ class CommonEmptyState extends StatelessWidget {
             child: Icon(
               icon,
               size: 64,
-              color: Colors.grey[400],
+              color: AppColors.textDisabled,
             ),
           ),
           const SizedBox(height: 24),
@@ -43,7 +44,7 @@ class CommonEmptyState extends StatelessWidget {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -51,9 +52,9 @@ class CommonEmptyState extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               message,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,

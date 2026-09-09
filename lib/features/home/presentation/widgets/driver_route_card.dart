@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class DriverRouteCard extends StatelessWidget {
   final String routeName;
   final VoidCallback onStopsTap;
   final VoidCallback onButtonTap;
+  final VoidCallback? onStudentsTap;
   final String buttonTitle;
   final bool isLive;
   final bool isPickup;
   final int totalStops;
+  final int totalStudents;
 
   const DriverRouteCard({
     super.key,
     required this.routeName,
     required this.onStopsTap,
     required this.onButtonTap,
+    this.onStudentsTap,
     this.buttonTitle = 'Resume Trip',
     this.isLive = true,
     this.isPickup = true,
     this.totalStops = 0,
+    this.totalStudents = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     // Colors based on Live vs Scheduled status
-    final liveColor = const Color(0xFF10B981); // Emerald Green for Live
-    final primaryBlue = const Color(0xFF3B82F6); // Standard primary brand blue
+    final liveColor = AppColors.success; // Emerald Green for Live
+    final primaryBlue = AppColors.primary; // Standard primary brand blue
 
     // Card border color: Subtle blue for scheduled, vibrant green glow for live
     final borderColor = isLive
@@ -33,13 +38,8 @@ class DriverRouteCard extends StatelessWidget {
         : primaryBlue.withAlpha(60);
 
     // Route Type (Pickup vs Drop) colors
-    final pickupColor = const Color(0xFF2563EB); // Deep Blue for Pickup
-    final dropColor = const Color.fromARGB(
-      255,
-      240,
-      69,
-      69,
-    ); // Warm Orange for Drop
+    final pickupColor = AppColors.pickupColor; // Deep Blue for Pickup
+    final dropColor = AppColors.dropColor; // Warm Orange for Drop
     final routeTypeColor = isPickup ? pickupColor : dropColor;
 
     return AnimatedContainer(
@@ -191,57 +191,121 @@ class DriverRouteCard extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  // Stops Button Action Card
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: onStopsTap,
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 9,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.theme.canvasColor,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: context.theme.dividerColor.withAlpha(45),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_rounded,
-                              size: 16,
-                              color: primaryBlue,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                totalStops > 0
-                                    ? "$totalStops ${totalStops == 1 ? 'Stop' : 'Stops'} Configured"
-                                    : "No Stops (Tap to add)",
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: totalStops > 0
-                                      ? context.text.bodyMedium?.color
-                                      : const Color.fromARGB(255, 89, 175, 251),
+                  // Action Buttons Row: Stops & Students
+                  Row(
+                    children: [
+                      // Stops Button Action Card
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onStopsTap,
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 9,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.theme.canvasColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: context.theme.dividerColor.withAlpha(45),
+                                  width: 1,
                                 ),
                               ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    totalStops > 0
+                                        ? Icons.location_on_rounded
+                                        : Icons.add_location_alt_rounded,
+                                    size: 16,
+                                    color: primaryBlue,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      totalStops > 0
+                                          ? "$totalStops ${totalStops == 1 ? 'Stop' : 'Stops'}"
+                                          : "Add Stop",
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: totalStops > 0
+                                            ? context.text.bodyMedium?.color
+                                            : AppColors.primary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: context.theme.dividerColor,
+                                  ),
+                                ],
+                              ),
                             ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: context.theme.dividerColor,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      // Students Button Action Card
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onStudentsTap,
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 9,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.theme.canvasColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: context.theme.dividerColor.withAlpha(45),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.people_alt_rounded,
+                                    size: 16,
+                                    color: AppColors.pickupColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      totalStudents > 0
+                                          ? "$totalStudents ${totalStudents == 1 ? 'Student' : 'Students'}"
+                                          : "0 Students",
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: totalStudents > 0
+                                            ? context.text.bodyMedium?.color
+                                            : AppColors.textMuted,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: context.theme.dividerColor,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 10),

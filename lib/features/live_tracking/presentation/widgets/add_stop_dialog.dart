@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
@@ -49,7 +50,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
       child: Material(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         elevation: 12,
@@ -66,13 +67,9 @@ class _AddStopDialogState extends State<AddStopDialog> {
                 // ── HEADER ──────────────────────────────────────────
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                    ),
-                    borderRadius: const BorderRadius.only(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(28),
                       topRight: Radius.circular(28),
                     ),
@@ -165,6 +162,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
                       CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         value: isEnabled,
+                        activeColor: AppColors.primary,
                         onChanged: (value) {
                           setState(() {
                             isEnabled = value ?? false;
@@ -177,7 +175,6 @@ class _AddStopDialogState extends State<AddStopDialog> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
                       const SizedBox(height: 18),
@@ -220,7 +217,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
                             label: liveProvider.isFetchingLocation
                                 ? "Fetching location..."
                                 : "Use Current Location",
-                            color: const Color(0xFF3B82F6),
+                            color: AppColors.primary,
                             isLoading: liveProvider.isFetchingLocation,
                             onTap: () async {
                               await liveProvider.fetchInitialLocation();
@@ -244,9 +241,9 @@ class _AddStopDialogState extends State<AddStopDialog> {
                       // Divider with "or"
                       Row(
                         children: [
-                          Expanded(
+                          const Expanded(
                             child: Divider(
-                              color: Colors.grey[300],
+                              color: AppColors.divider,
                               thickness: 1,
                             ),
                           ),
@@ -257,13 +254,13 @@ class _AddStopDialogState extends State<AddStopDialog> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey[500],
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Divider(
-                              color: Colors.grey[300],
+                              color: AppColors.divider,
                               thickness: 1,
                             ),
                           ),
@@ -275,7 +272,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
                       _LocationActionButton(
                         icon: Icons.map_rounded,
                         label: 'Select from Map',
-                        color: const Color(0xFF2563EB),
+                        color: AppColors.primaryDark,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -298,9 +295,9 @@ class _AddStopDialogState extends State<AddStopDialog> {
                                   ? null
                                   : _handleSubmit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3B82F6),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
-                                disabledBackgroundColor: Colors.grey[300],
+                                disabledBackgroundColor: AppColors.border,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 15,
@@ -318,10 +315,10 @@ class _AddStopDialogState extends State<AddStopDialog> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : Row(
+                                  : const Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
-                                      children: const [
+                                      children: [
                                         Icon(
                                           Icons.add_location_alt_rounded,
                                           size: 20,
@@ -358,10 +355,10 @@ class _AddStopDialogState extends State<AddStopDialog> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withAlpha(15),
+            color: AppColors.primary.withAlpha(15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+          child: Icon(icon, size: 16, color: AppColors.primary),
         ),
         const SizedBox(width: 8),
         Text(
@@ -369,7 +366,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
           style: const TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+            color: AppColors.textPrimary,
             letterSpacing: 0.3,
           ),
         ),
@@ -400,7 +397,7 @@ class _AddStopDialogState extends State<AddStopDialog> {
 
     if (result == null) {
       SnackbarHelper.showSuccess(context, message: 'Stop added successfully');
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       SnackbarHelper.showError(context, message: result);
     }
@@ -435,36 +432,54 @@ class _ModernDropdown extends StatelessWidget {
         ? value
         : (items.isNotEmpty ? items.first.id : null);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+    return DropdownButtonFormField<int>(
+      initialValue: effectiveValue,
+      isExpanded: true,
+      dropdownColor: AppColors.surface,
+      icon: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: AppColors.primary,
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: effectiveValue,
-          isExpanded: true,
-          isDense: true,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: Color(0xFF3B82F6),
-          ),
-          style: const TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF0F172A),
-          ),
-          items: items.map((route) {
-            return DropdownMenuItem<int>(
-              value: route.id,
-              child: Text(route.routeName ?? 'Route #${route.id}'),
-            );
-          }).toList(),
-          onChanged: onChanged,
+      style: const TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.cardBg,
+        prefixIcon: const Icon(
+          Icons.alt_route_rounded,
+          size: 18,
+          color: AppColors.textDisabled,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
         ),
       ),
+      items: items.map((route) {
+        return DropdownMenuItem<int>(
+          value: route.id,
+          child: Text(
+            route.routeName ?? 'Route #${route.id}',
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
     );
   }
 }
@@ -484,40 +499,40 @@ class _ModernInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: Colors.grey[400]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: keyboardType,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0F172A),
-              ),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[400],
-                ),
-                isDense: true,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ],
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.cardBg,
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textDisabled,
+        ),
+        prefixIcon: Icon(icon, size: 18, color: AppColors.textDisabled),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
+        ),
       ),
     );
   }
@@ -537,13 +552,13 @@ class _LocationDisplay extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: hasLocation
-            ? const Color(0xFF3B82F6).withAlpha(12)
-            : const Color(0xFFF8FAFC),
+            ? AppColors.primary.withAlpha(12)
+            : AppColors.cardBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: hasLocation
-              ? const Color(0xFF3B82F6).withAlpha(60)
-              : const Color(0xFFE2E8F0),
+              ? AppColors.primary.withAlpha(60)
+              : AppColors.border,
           width: 1.5,
         ),
       ),
@@ -554,7 +569,7 @@ class _LocationDisplay extends StatelessWidget {
                 ? Icons.check_circle_rounded
                 : Icons.location_off_rounded,
             size: 18,
-            color: hasLocation ? const Color(0xFF3B82F6) : Colors.grey[400],
+            color: hasLocation ? AppColors.primary : AppColors.textDisabled,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -565,7 +580,7 @@ class _LocationDisplay extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: hasLocation ? const Color(0xFF3B82F6) : Colors.grey[500],
+                color: hasLocation ? AppColors.primary : AppColors.textMuted,
                 letterSpacing: 0.2,
               ),
             ),

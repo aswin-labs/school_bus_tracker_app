@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StudentTile extends StatelessWidget {
@@ -7,6 +8,8 @@ class StudentTile extends StatelessWidget {
   final String? phoneNumber;
   final List<Color> colorPair;
   final VoidCallback? onPhoneTap;
+  final VoidCallback? onDeleteTap;
+  final bool isDeleting;
 
   const StudentTile({
     super.key,
@@ -15,6 +18,8 @@ class StudentTile extends StatelessWidget {
     this.phoneNumber,
     required this.colorPair,
     this.onPhoneTap,
+    this.onDeleteTap,
+    this.isDeleting = false,
   });
 
   Future<void> _makePhoneCall(String phone) async {
@@ -43,9 +48,9 @@ class StudentTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          border: Border.all(color: AppColors.border, width: 1),
         ),
         child: Row(
           children: [
@@ -84,7 +89,7 @@ class StudentTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF0F172A),
+                      color: AppColors.textPrimary,
                       letterSpacing: 0.1,
                     ),
                     maxLines: 1,
@@ -97,16 +102,16 @@ class StudentTile extends StatelessWidget {
                         Icon(
                           Icons.person_outline_rounded,
                           size: 12,
-                          color: Colors.grey[400],
+                          color: AppColors.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             guardianName,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey[500],
+                              color: AppColors.textSecondary,
                               letterSpacing: 0.1,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -122,16 +127,16 @@ class StudentTile extends StatelessWidget {
                         Icon(
                           Icons.phone_outlined,
                           size: 12,
-                          color: Colors.grey[400],
+                          color: AppColors.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             phoneNumber!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                               letterSpacing: 0.2,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -160,18 +165,56 @@ class StudentTile extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withAlpha(20),
+                      color: AppColors.success.withAlpha(20),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF10B981).withAlpha(50),
+                        color: AppColors.success.withAlpha(50),
                         width: 1,
                       ),
                     ),
                     child: const Icon(
                       Icons.call_rounded,
                       size: 18,
-                      color: Color(0xFF059669),
+                      color: AppColors.successDark,
                     ),
+                  ),
+                ),
+              ),
+            ],
+            if (onDeleteTap != null) ...[
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isDeleting ? null : onDeleteTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withAlpha(18),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.error.withAlpha(50),
+                        width: 1,
+                      ),
+                    ),
+                    child: isDeleting
+                        ? const Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: AppColors.error,
+                          ),
                   ),
                 ),
               ),

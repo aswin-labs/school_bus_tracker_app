@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class StopTile extends StatelessWidget {
   final String stopName;
@@ -6,6 +7,8 @@ class StopTile extends StatelessWidget {
   final int studentsCount;
   final bool isCompleted;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+  final bool isDeleting;
 
   const StopTile({
     super.key,
@@ -14,13 +17,13 @@ class StopTile extends StatelessWidget {
     required this.studentsCount,
     this.isCompleted = false,
     this.onTap,
+    this.onDelete,
+    this.isDeleting = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = isCompleted
-        ? const Color(0xFF10B981)
-        : const Color(0xFF3B82F6);
+    final accentColor = isCompleted ? AppColors.success : AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -28,7 +31,7 @@ class StopTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: accentColor.withAlpha(40), width: 1),
             boxShadow: [
@@ -50,14 +53,14 @@ class StopTile extends StatelessWidget {
                   color: isCompleted
                       ? accentColor.withAlpha(25)
                       : (priority == 0
-                          ? const Color(0xFFF1F5F9)
+                          ? AppColors.borderLight
                           : accentColor.withAlpha(20)),
                   borderRadius: BorderRadius.circular(11),
                   border: Border.all(
                     color: isCompleted
                         ? accentColor.withAlpha(50)
                         : (priority == 0
-                            ? const Color(0xFFCBD5E1)
+                            ? AppColors.textDisabled
                             : accentColor.withAlpha(35)),
                   ),
                 ),
@@ -72,7 +75,7 @@ class StopTile extends StatelessWidget {
                           ? const Icon(
                               Icons.remove_rounded,
                               size: 17,
-                              color: Color(0xFF64748B),
+                              color: AppColors.textSecondary,
                             )
                           : Text(
                               '$priority',
@@ -102,7 +105,7 @@ class StopTile extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF0F172A),
+                              color: AppColors.textPrimary,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -115,10 +118,10 @@ class StopTile extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withAlpha(15),
+                              color: AppColors.success.withAlpha(15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: const Color(0xFF10B981).withAlpha(40),
+                                color: AppColors.success.withAlpha(40),
                               ),
                             ),
                             child: const Text(
@@ -126,7 +129,7 @@ class StopTile extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF10B981),
+                                color: AppColors.success,
                               ),
                             ),
                           ),
@@ -138,10 +141,10 @@ class StopTile extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: AppColors.cardBg,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                                color: AppColors.border,
                               ),
                             ),
                             child: const Text(
@@ -149,7 +152,7 @@ class StopTile extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF64748B),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
@@ -193,7 +196,45 @@ class StopTile extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
+              if (onDelete != null) ...[
+                const SizedBox(width: 6),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: isDeleting ? null : onDelete,
+                    borderRadius: BorderRadius.circular(9),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withAlpha(15),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(
+                          color: AppColors.error.withAlpha(40),
+                        ),
+                      ),
+                      child: isDeleting
+                          ? const Center(
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 16,
+                              color: AppColors.error,
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(width: 6),
 
               // Arrow
               Container(

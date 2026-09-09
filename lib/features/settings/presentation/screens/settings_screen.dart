@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
 import 'package:school_bus_tracker/core/extensions/size_extensions.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/theme/theme_provider.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/auth/presentation/provider/auth_provider.dart';
@@ -64,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                        colors: AppColors.primaryColors,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -91,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Theme toggle
             Container(
@@ -122,18 +123,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Divider(
                     thickness: 2,
                     color: context.theme.focusColor,
                     radius: BorderRadius.circular(20),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Notification', style: context.text.bodyLarge),
-                      Icon(Icons.arrow_forward_ios),
+                      const Icon(Icons.arrow_forward_ios),
                     ],
                   ),
                 ],
@@ -172,30 +173,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    Icon(Icons.logout),
+                    Icon(Icons.logout, color: AppColors.error),
                     SizedBox(width: 10),
                     Text(
                       "Logout",
-                      style: TextStyle(color: Colors.red, fontSize: 18),
+                      style: TextStyle(color: AppColors.error, fontSize: 18),
                     ),
                   ],
                 ),
               ),
             ),
-            // ListTile(
-            //   leading: const Icon(Icons.logout),
-            //   title: Text('Logout', style: context.text.bodyLarge),
-            //   trailing: authProvider.isLoading
-            //       ? const SizedBox(
-            //           width: 24,
-            //           height: 24,
-            //           child: CircularProgressIndicator(strokeWidth: 2),
-            //         )
-            //       : null,
-            //   onTap: authProvider.isLoading ? null : _handleLogout,
-            // ),
           ],
         ),
       ),

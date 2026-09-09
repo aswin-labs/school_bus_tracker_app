@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class AddButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -16,7 +17,7 @@ class AddButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF3B82F6),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -27,11 +28,12 @@ class AddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_circle_rounded, size: 20),
-            SizedBox(width: 8),
+            const Icon(Icons.add_circle_rounded, size: 20),
+            const SizedBox(width: 8),
             Text(
               buttonText,
-              style: TextStyle(
+              style: const TextStyle(
+                inherit: true,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.4,

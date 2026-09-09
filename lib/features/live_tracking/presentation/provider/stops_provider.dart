@@ -37,6 +37,12 @@ class StopsProvider extends ChangeNotifier {
   bool _isUpdatingStop = false;
   bool get isUpdatingStop => _isUpdatingStop;
 
+  bool _isDeletingStop = false;
+  bool get isDeletingStop => _isDeletingStop;
+
+  int? _deletingStopId;
+  int? get deletingStopId => _deletingStopId;
+
   LatLng? _selectedLocation;
   LatLng? get selectedLocation => _selectedLocation;
 
@@ -157,6 +163,12 @@ class StopsProvider extends ChangeNotifier {
     if (_isAssigningPairStops == value) return;
 
     _isAssigningPairStops = value;
+    notifyListeners();
+  }
+
+  void _setDeletingStop(bool value, [int? stopId]) {
+    _isDeletingStop = value;
+    _deletingStopId = value ? stopId : null;
     notifyListeners();
   }
 
@@ -427,6 +439,46 @@ class StopsProvider extends ChangeNotifier {
       return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _setUpdatingStop(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete Stop
+  // ---------------------------------------------------------------------------
+
+  Future<String?> deleteStop({
+    required int stopId,
+    required int routeId,
+  }) async {
+    if (_isDeletingStop) return null;
+
+    _setDeletingStop(true, stopId);
+
+    try {
+      final response = await _stopServices.deleteStop(stopId: stopId);
+
+      log('Delete stop response: ${response.data}');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        return ApiErrorUtils.getErrorMessage(
+          data: response.data,
+          defaultMessage: 'Failed to delete stop',
+          statusCode: response.statusCode,
+        );
+      }
+
+      await fetchStopsByRouteId(routeId);
+      fetchUnassignedStopsInPairRoute(routeId);
+
+      log('Stop deleted successfully');
+
+      return null;
+    } catch (e, stackTrace) {
+      log('Delete stop error: $e', stackTrace: stackTrace);
+
+      return ApiErrorUtils.getExceptionErrorMessage(e);
+    } finally {
+      _setDeletingStop(false);
     }
   }
 

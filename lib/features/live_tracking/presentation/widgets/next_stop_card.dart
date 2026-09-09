@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class NextStopCard extends StatelessWidget {
   final String stopName;
@@ -22,12 +23,12 @@ class NextStopCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Color scheme based on pickup/drop
     final accentColor = isPickup
-        ? const Color(0xFF10B981) // Green for pickup
-        : const Color(0xFF3B82F6); // Blue for drop
+        ? AppColors.pickupColor
+        : AppColors.dropColor;
 
     final accentColorDark = isPickup
-        ? const Color(0xFF059669)
-        : const Color(0xFF2563EB);
+        ? AppColors.pickupColorDark
+        : AppColors.dropColorDark;
 
     final buttonText = isPickup ? 'Arrived for Pickup' : 'Arrived for Drop';
 
@@ -37,7 +38,7 @@ class NextStopCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: accentColor.withAlpha(100), width: 2),
           boxShadow: [
@@ -160,12 +161,12 @@ class NextStopCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Stop Name',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey[500],
+                                color: AppColors.textMuted,
                                 letterSpacing: 0.4,
                               ),
                             ),
@@ -175,7 +176,7 @@ class NextStopCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
+                                color: AppColors.textPrimary,
                                 letterSpacing: 0.1,
                               ),
                               maxLines: 2,
@@ -202,20 +203,20 @@ class NextStopCard extends StatelessWidget {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withAlpha(15),
+                              color: AppColors.primary.withAlpha(15),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: const Color(0xFF3B82F6).withAlpha(40),
+                                color: AppColors.primary.withAlpha(40),
                                 width: 1,
                               ),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.people_alt_rounded,
                                   size: 15,
-                                  color: Color(0xFF3B82F6),
+                                  color: AppColors.primary,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
@@ -223,7 +224,7 @@ class NextStopCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                     letterSpacing: 0.2,
                                   ),
                                 ),
@@ -245,20 +246,20 @@ class NextStopCard extends StatelessWidget {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withAlpha(15),
+                              color: AppColors.primary.withAlpha(15),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: const Color(0xFF3B82F6).withAlpha(40),
+                                color: AppColors.primary.withAlpha(40),
                                 width: 1,
                               ),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.directions_rounded,
                                   size: 15,
-                                  color: Color(0xFF3B82F6),
+                                  color: AppColors.primary,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
@@ -266,7 +267,7 @@ class NextStopCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                     letterSpacing: 0.2,
                                   ),
                                 ),

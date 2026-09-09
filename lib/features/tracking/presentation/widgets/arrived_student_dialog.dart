@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 
 class ArrivedStudentDialog extends StatefulWidget {
@@ -67,8 +68,8 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final actionColor = widget.forPicking
-        ? const Color(0xFF10B981)
-        : const Color(0xFF3B82F6);
+        ? AppColors.pickupColor
+        : AppColors.dropColor;
     final actionLabel = widget.forPicking ? 'PICKUP' : 'DROP';
     final actionIcon = widget.forPicking
         ? Icons.login_rounded
@@ -80,7 +81,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
       child: Container(
         constraints: BoxConstraints(maxHeight: height * 0.75, maxWidth: 440),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -166,8 +167,8 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
               decoration: BoxDecoration(
                 color: actionColor.withAlpha(15),
-                border: Border(
-                  bottom: BorderSide(color: const Color(0xFFE2E8F0), width: 1),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.border, width: 1),
                 ),
               ),
               child: Row(
@@ -188,10 +189,10 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                   Expanded(
                     child: Text(
                       'All students marked for $actionLabel. Tap any to mark absent.',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         height: 1.3,
                       ),
                     ),
@@ -212,11 +213,11 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                     horizontal: 20,
                     vertical: 12,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surface,
                     border: Border(
                       bottom: BorderSide(
-                        color: const Color(0xFFE2E8F0),
+                        color: AppColors.border,
                         width: 1,
                       ),
                     ),
@@ -235,7 +236,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                         icon: Icons.cancel_outlined,
                         label: 'Absent',
                         count: absentCount,
-                        color: const Color(0xFFEF4444),
+                        color: AppColors.error,
                       ),
                     ],
                   ),
@@ -259,18 +260,18 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                       padding: const EdgeInsets.symmetric(vertical: 40),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: const [
                           Icon(
                             Icons.people_outline_rounded,
                             size: 48,
-                            color: Colors.grey[300],
+                            color: AppColors.textDisabled,
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             'No students at this stop',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[400],
+                              color: AppColors.textMuted,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -279,13 +280,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                     );
                   }
 
-                  const avatarColors = [
-                    [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                    [Color(0xFFF59E0B), Color(0xFFF97316)],
-                    [Color(0xFF10B981), Color(0xFF059669)],
-                    [Color(0xFFEC4899), Color(0xFFEF4444)],
-                  ];
+                  final avatarColors = AppColors.avatarColorPairs;
 
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -311,12 +306,12 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: isAbsent
-                                ? const Color(0xFFEF4444).withAlpha(15)
+                                ? AppColors.error.withAlpha(15)
                                 : actionColor.withAlpha(12),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isAbsent
-                                  ? const Color(0xFFEF4444).withAlpha(80)
+                                  ? AppColors.error.withAlpha(80)
                                   : actionColor.withAlpha(60),
                               width: isAbsent ? 2 : 1.5,
                             ),
@@ -334,7 +329,6 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                     colors: colorPair,
                                   ),
                                   borderRadius: BorderRadius.circular(14),
-                                  // opacity: isAbsent ? 0.5 : 1.0,
                                 ),
                                 child: Center(
                                   child: Text(
@@ -360,8 +354,8 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         color: isAbsent
-                                            ? Colors.grey[500]
-                                            : const Color(0xFF0F172A),
+                                            ? AppColors.textMuted
+                                            : AppColors.textPrimary,
                                         letterSpacing: 0.1,
                                         decoration: isAbsent
                                             ? TextDecoration.lineThrough
@@ -376,17 +370,17 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                         Icon(
                                           Icons.person_outline_rounded,
                                           size: 13,
-                                          color: Colors.grey[400],
+                                          color: AppColors.textDisabled,
                                         ),
                                         const SizedBox(width: 5),
                                         Expanded(
                                           child: Text(
                                             student.user?.name ??
                                                 'Not mentioned',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12.5,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.grey[500],
+                                              color: AppColors.textSecondary,
                                               letterSpacing: 0.1,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -405,7 +399,7 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isAbsent
-                                      ? const Color(0xFFEF4444)
+                                      ? AppColors.error
                                       : actionColor,
                                   borderRadius: BorderRadius.circular(10),
                                 ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
+import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/rearrange_stops_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stop_detials_bottomsheet.dart';
@@ -37,6 +40,108 @@ class _StopsManagementBottomsheetState
     SnackbarHelper.showError(context, message: error);
   }
 
+  Future<void> _confirmDeleteStop(StopModel stop) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Delete Stop',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete "${stop.stopName}"? All student assignments for this stop will also be removed.',
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    final error = await context.read<StopsProvider>().deleteStop(
+      stopId: stop.id,
+      routeId: widget.routeId,
+    );
+
+    if (!mounted) return;
+
+    if (error == null) {
+      SnackbarHelper.showSuccess(
+        context,
+        message: '${stop.stopName} deleted successfully',
+      );
+      context.read<RouteProvider>().fetchDriverRoutes();
+    } else {
+      SnackbarHelper.showError(context, message: error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -47,7 +152,7 @@ class _StopsManagementBottomsheetState
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -67,7 +172,7 @@ class _StopsManagementBottomsheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -85,17 +190,17 @@ class _StopsManagementBottomsheetState
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppColors.cardBg,
                           borderRadius: BorderRadius.circular(11),
                           border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                            color: AppColors.border,
                             width: 1,
                           ),
                         ),
                         child: const Icon(
                           Icons.arrow_back_rounded,
                           size: 18,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -105,7 +210,7 @@ class _StopsManagementBottomsheetState
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: const Color(0xFF0F172A),
+                        color: AppColors.textPrimary,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -116,7 +221,7 @@ class _StopsManagementBottomsheetState
                 ),
               ),
 
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+              const Divider(height: 1, thickness: 1, color: AppColors.divider),
 
               // ── SCROLLABLE CONTENT ──────────────────────────
               Expanded(
@@ -125,7 +230,7 @@ class _StopsManagementBottomsheetState
                     if (provider.isLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF3B82F6),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -142,15 +247,15 @@ class _StopsManagementBottomsheetState
                               Icon(
                                 Icons.error_outline_rounded,
                                 size: 64,
-                                color: Colors.grey[300],
+                                color: AppColors.textDisabled,
                               ),
                               const SizedBox(height: 16),
-                              Text(
+                              const Text(
                                 'No Stops found',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -182,18 +287,18 @@ class _StopsManagementBottomsheetState
                                   icon: const Icon(
                                     Icons.alt_route_rounded,
                                     size: 18,
-                                    color: Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                   ),
                                   label: Text(
                                     'Import Stops from Pair Route (${provider.unassignedPairStops.length})',
                                     style: const TextStyle(
-                                      color: Color(0xFF3B82F6),
+                                      color: AppColors.primary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     side: const BorderSide(
-                                      color: Color(0xFF3B82F6),
+                                      color: AppColors.primary,
                                     ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
@@ -221,10 +326,10 @@ class _StopsManagementBottomsheetState
                             child: Container(
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: AppColors.cardBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
+                                  color: AppColors.border,
                                   width: 1.5,
                                 ),
                               ),
@@ -234,14 +339,7 @@ class _StopsManagementBottomsheetState
                                     width: 56,
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF3B82F6),
-                                          Color(0xFF2563EB),
-                                        ],
-                                      ),
+                                      gradient: AppColors.primaryGradient,
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: const Icon(
@@ -256,12 +354,12 @@ class _StopsManagementBottomsheetState
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'ROUTE NAME',
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.grey[500],
+                                            color: AppColors.textMuted,
                                             letterSpacing: 1.2,
                                           ),
                                         ),
@@ -276,7 +374,7 @@ class _StopsManagementBottomsheetState
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F172A),
+                                                color: AppColors.textPrimary,
                                                 letterSpacing: 0.2,
                                               ),
                                               maxLines: 2,
@@ -317,13 +415,13 @@ class _StopsManagementBottomsheetState
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        const Color(0xFF3B82F6).withAlpha(18),
-                                        const Color(0xFF6366F1).withAlpha(18),
+                                        AppColors.primary.withAlpha(18),
+                                        AppColors.accent.withAlpha(18),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: const Color(0xFF3B82F6).withAlpha(60),
+                                      color: AppColors.primary.withAlpha(60),
                                       width: 1.5,
                                     ),
                                   ),
@@ -332,7 +430,7 @@ class _StopsManagementBottomsheetState
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF3B82F6),
+                                          color: AppColors.primary,
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(
@@ -352,15 +450,15 @@ class _StopsManagementBottomsheetState
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F172A),
+                                                color: AppColors.textPrimary,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
                                               '${provider.unassignedPairStops.length} unassigned stop(s) available',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey[600],
+                                                color: AppColors.textSecondary,
                                               ),
                                             ),
                                           ],
@@ -368,7 +466,7 @@ class _StopsManagementBottomsheetState
                                       ),
                                       const Icon(
                                         Icons.chevron_right_rounded,
-                                        color: Color(0xFF3B82F6),
+                                        color: AppColors.primary,
                                         size: 22,
                                       ),
                                     ],
@@ -405,7 +503,7 @@ class _StopsManagementBottomsheetState
                                   width: 3,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
@@ -418,7 +516,7 @@ class _StopsManagementBottomsheetState
                                       .copyWith(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
-                                        color: const Color(0xFF0F172A),
+                                        color: AppColors.textPrimary,
                                         letterSpacing: 0.2,
                                       ),
                                 ),
@@ -445,7 +543,7 @@ class _StopsManagementBottomsheetState
                                     ),
                                     minimumSize: Size.zero,
                                     tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
+                                      MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   icon: const Icon(
                                     Icons.swap_vert_rounded,
@@ -479,7 +577,10 @@ class _StopsManagementBottomsheetState
                                       stop.students?.length ?? 0;
                                   final priority =
                                       stop.stopPriority?.first.priority ?? 0;
-                                  return GestureDetector(
+                                  return StopTile(
+                                    stopName: stop.stopName,
+                                    priority: priority,
+                                    studentsCount: studentsCount,
                                     onTap: () {
                                       showModalBottomSheet(
                                         context: context,
@@ -491,11 +592,9 @@ class _StopsManagementBottomsheetState
                                             ),
                                       );
                                     },
-                                    child: StopTile(
-                                      stopName: stop.stopName,
-                                      priority: priority,
-                                      studentsCount: studentsCount,
-                                    ),
+                                    onDelete: () => _confirmDeleteStop(stop),
+                                    isDeleting: provider.isDeletingStop &&
+                                        provider.deletingStopId == stop.id,
                                   );
                                 }, childCount: provider.stops.length),
                               ),

@@ -3,12 +3,14 @@ class StudentModel {
   String fullName;
   String? regNo;
   User? user;
+  ClassGradeModel? classGrade;
 
   StudentModel({
     required this.id,
     required this.fullName,
     this.regNo,
     this.user,
+    this.classGrade,
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) => StudentModel(
@@ -16,6 +18,9 @@ class StudentModel {
     fullName: json["full_name"],
     regNo: json["reg_no"],
     user: json["User"] == null ? null : User.fromJson(json["User"]),
+    classGrade: json["Class"] == null
+        ? null
+        : ClassGradeModel.fromJson(json["Class"]),
   );
 }
 
@@ -27,4 +32,13 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) =>
       User(name: json["name"], phone: json["phone"]);
+}
+
+class ClassGradeModel {
+  String? classname;
+
+  ClassGradeModel({this.classname});
+
+  factory ClassGradeModel.fromJson(Map<String, dynamic> json) =>
+      ClassGradeModel(classname: json["classname"]);
 }

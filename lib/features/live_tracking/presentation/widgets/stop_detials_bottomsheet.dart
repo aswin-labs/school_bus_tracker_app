@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
 import 'package:school_bus_tracker/core/widgets/custom_more_menu.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
+import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_student_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/assign_pair_stops_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/edit_stop_dialog.dart';
@@ -55,6 +59,211 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
     SnackbarHelper.showError(context, message: error);
   }
 
+  Future<void> _confirmDeleteStudent(StudentModel student) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Remove Student',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to remove ${student.fullName} from this stop?',
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Remove',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    final error = await context.read<StudentProvider>().deleteStudentFromStop(
+      stopId: widget.stopId,
+      studentId: student.id,
+    );
+
+    if (!mounted) return;
+
+    if (error == null) {
+      SnackbarHelper.showSuccess(
+        context,
+        message: '${student.fullName} removed from stop',
+      );
+      _loadStopDetails();
+      context.read<StopsProvider>().fetchStopsByRouteId(widget.routeId);
+    } else {
+      SnackbarHelper.showError(context, message: error);
+    }
+  }
+
+  Future<void> _confirmDeleteCurrentStop(StopModel stop) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Delete Stop',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete "${stop.stopName}"? All student assignments for this stop will also be removed.',
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    final error = await context.read<StopsProvider>().deleteStop(
+      stopId: stop.id,
+      routeId: widget.routeId,
+    );
+
+    if (!mounted) return;
+
+    if (error == null) {
+      SnackbarHelper.showSuccess(
+        context,
+        message: '${stop.stopName} deleted successfully',
+      );
+      Navigator.pop(context);
+    } else {
+      SnackbarHelper.showError(context, message: error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -85,7 +294,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: AppColors.divider,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -103,17 +312,17 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppColors.cardBg,
                           borderRadius: BorderRadius.circular(11),
                           border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                            color: AppColors.border,
                             width: 1,
                           ),
                         ),
                         child: const Icon(
                           Icons.arrow_back_rounded,
                           size: 18,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -123,7 +332,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: const Color(0xFF0F172A),
+                        color: AppColors.textPrimary,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -136,14 +345,14 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                         }
                         return CustomMoreMenu(
                           icon: Icons.more_vert_rounded,
-                          iconColor: const Color(0xFF0F172A),
+                          iconColor: AppColors.textPrimary,
                           iconSize: 20,
                           options: [
                             MoreMenuOption(
                               name: 'Edit Stop',
                               icon: Icons.edit_rounded,
-                              iconColor: const Color(0xFF3B82F6),
-                              textColor: const Color(0xFF0F172A),
+                              iconColor: AppColors.primary,
+                              textColor: AppColors.textPrimary,
                               onTap: () {
                                 showDialog(
                                   context: context,
@@ -154,6 +363,13 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                 );
                               },
                             ),
+                            MoreMenuOption(
+                              name: 'Delete Stop',
+                              icon: Icons.delete_outline_rounded,
+                              iconColor: AppColors.error,
+                              textColor: AppColors.error,
+                              onTap: () => _confirmDeleteCurrentStop(stop),
+                            ),
                           ],
                         );
                       },
@@ -162,7 +378,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                 ),
               ),
 
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+              const Divider(height: 1, thickness: 1, color: AppColors.divider),
 
               // ── SCROLLABLE CONTENT ──────────────────────────
               Expanded(
@@ -174,7 +390,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                         (stop != null && stop.id != widget.stopId)) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF3B82F6),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -213,10 +429,10 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                             child: Container(
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: AppColors.cardBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
+                                  color: AppColors.border,
                                   width: 1.5,
                                 ),
                               ),
@@ -226,14 +442,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                     width: 56,
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF3B82F6),
-                                          Color(0xFF2563EB),
-                                        ],
-                                      ),
+                                      gradient: AppColors.primaryGradient,
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: const Icon(
@@ -253,7 +462,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.grey[500],
+                                            color: AppColors.textMuted,
                                             letterSpacing: 1.2,
                                           ),
                                         ),
@@ -263,7 +472,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F172A),
+                                            color: AppColors.textPrimary,
                                             letterSpacing: 0.2,
                                           ),
                                           maxLines: 2,
@@ -302,15 +511,13 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        const Color(0xFF3B82F6).withAlpha(18),
-                                        const Color(0xFF6366F1).withAlpha(18),
+                                        AppColors.primary.withAlpha(18),
+                                        AppColors.accent.withAlpha(18),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: const Color(
-                                        0xFF3B82F6,
-                                      ).withAlpha(60),
+                                      color: AppColors.primary.withAlpha(60),
                                       width: 1.5,
                                     ),
                                   ),
@@ -319,7 +526,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF3B82F6),
+                                          color: AppColors.primary,
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -341,15 +548,15 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F172A),
+                                                color: AppColors.textPrimary,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
                                               '${provider.unassignedPairStops.length} unassigned stop(s) available',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey[600],
+                                                color: AppColors.textSecondary,
                                               ),
                                             ),
                                           ],
@@ -357,7 +564,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                       ),
                                       const Icon(
                                         Icons.chevron_right_rounded,
-                                        color: Color(0xFF3B82F6),
+                                        color: AppColors.primary,
                                         size: 22,
                                       ),
                                     ],
@@ -372,16 +579,17 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                             child: AddButton(
-                              onPressed: () {
-                                // final routeId = stop.routeId;
-                                showDialog(
+                              onPressed: () async {
+                                final updated = await showDialog<bool>(
                                   context: context,
                                   builder: (_) => AddStudentDialog(
                                     routeId: widget.routeId,
                                     stopId: widget.stopId,
-                                    // alreadyAddedStudents: stop.students,
                                   ),
                                 );
+                                if (updated == true && mounted) {
+                                  _loadStopDetails();
+                                }
                               },
                               buttonText: 'Add New Student',
                             ),
@@ -398,7 +606,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                   width: 3,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
@@ -411,7 +619,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                       .copyWith(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
-                                        color: const Color(0xFF0F172A),
+                                        color: AppColors.textPrimary,
                                         letterSpacing: 0.2,
                                       ),
                                 ),
@@ -422,14 +630,10 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF3B82F6,
-                                    ).withAlpha(20),
+                                    color: AppColors.primary.withAlpha(20),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const Color(
-                                        0xFF3B82F6,
-                                      ).withAlpha(60),
+                                      color: AppColors.primary.withAlpha(60),
                                       width: 1,
                                     ),
                                   ),
@@ -438,7 +642,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF3B82F6),
+                                      color: AppColors.primary,
                                       letterSpacing: 0.3,
                                     ),
                                   ),
@@ -463,35 +667,31 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                       Container(
                                         padding: const EdgeInsets.all(24),
                                         decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFF10B981,
-                                          ).withAlpha(15),
+                                          color: AppColors.success.withAlpha(15),
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(
                                           Icons.people_outline_rounded,
                                           size: 56,
-                                          color: const Color(
-                                            0xFF10B981,
-                                          ).withAlpha(150),
+                                          color: AppColors.success.withAlpha(150),
                                         ),
                                       ),
                                       const SizedBox(height: 20),
-                                      Text(
+                                      const Text(
                                         'No students yet',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.grey[700],
+                                          color: AppColors.textSecondary,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      Text(
+                                      const Text(
                                         'Add students to this stop using\nthe button above',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: Colors.grey[500],
+                                          color: AppColors.textMuted,
                                           height: 1.4,
                                         ),
                                       ),
@@ -512,24 +712,24 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                     index,
                                   ) {
                                     final student = stop.students![index];
+                                    final colorPair = AppColors.avatarColorPairs[
+                                        index % AppColors.avatarColorPairs.length];
 
-                                    const avatarColors = [
-                                      [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                      [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
-                                      [Color(0xFFF59E0B), Color(0xFFF97316)],
-                                      [Color(0xFF10B981), Color(0xFF059669)],
-                                      [Color(0xFFEC4899), Color(0xFFEF4444)],
-                                    ];
-
-                                    final colorPair =
-                                        avatarColors[index %
-                                            avatarColors.length];
-
-                                    return StudentTile(
-                                      studentName: student.fullName,
-                                      guardianName: student.user?.name ?? '',
-                                      phoneNumber: student.user?.phone,
-                                      colorPair: colorPair,
+                                    return Consumer<StudentProvider>(
+                                      builder: (context, studentProvider, _) {
+                                        return StudentTile(
+                                          studentName: student.fullName,
+                                          guardianName: student.user?.name ?? '',
+                                          phoneNumber: student.user?.phone,
+                                          colorPair: colorPair,
+                                          onDeleteTap: () =>
+                                              _confirmDeleteStudent(student),
+                                          isDeleting:
+                                              studentProvider.isDeleting &&
+                                              studentProvider.deletingStudentId ==
+                                                  student.id,
+                                        );
+                                      },
                                     );
                                   }, childCount: stop.students!.length),
                                 ),

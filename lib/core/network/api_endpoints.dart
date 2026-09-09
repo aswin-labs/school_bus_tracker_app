@@ -19,7 +19,7 @@ class ApiEndpoints {
 
   // ---------------------STOPS------------------------------------
 
-    // get stops by routeId
+  // get stops by routeId
   static const getStops = "/driver/getStopsForDriver";
 
   // get single stop details
@@ -37,11 +37,12 @@ class ApiEndpoints {
   // add bulk stops
   static const addBulkStops = "/driver/bulkStopCreation";
 
+  // get all students by routeId
+  static const getStudentsByRouteId = "/driver/getStudentsByRouteId";
 
-
-  // get students by routeId
-  static const getStudents = "/driver/getMyStudents";
-  static const getStudentsWithUnassignedStopsByRouteId = "/driver/getMyStudents";
+  // get students by routeId (unassigned stops)
+  static const getStudentsWithUnassignedStopsByRouteId =
+      "/driver/getStudentsWithUnassignedStopsByRouteId";
 
   // add students to stop
   static const addStudentsToStop = "/driver/assignStudentToStop";
@@ -65,4 +66,7 @@ class ApiEndpoints {
 
   // delete student from stop
   static const deleteStudentFromStop = "/driver/deleteStudentFromStop";
+
+  // delete stop by id
+  static const deleteStop = "/driver/deleteStopById";
 }

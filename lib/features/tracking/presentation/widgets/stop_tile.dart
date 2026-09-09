@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class StopTile extends StatelessWidget {
   final String stopName;
@@ -21,10 +22,10 @@ class StopTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = isActive
-        ? const Color(0xFF3B82F6)
+        ? AppColors.primary
         : isCompleted
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF3B82F6);
+        ? AppColors.textDisabled
+        : AppColors.primary;
 
     return Padding(
       padding: EdgeInsets.only(bottom: isActive ? 10 : 8),
@@ -32,7 +33,7 @@ class StopTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(isActive ? 20 : 16),
             border: Border.all(
               color: accentColor.withAlpha(isActive ? 80 : 40),
@@ -159,8 +160,8 @@ class StopTile extends StatelessWidget {
                               fontSize: isActive ? 14.5 : 13.5,
                               fontWeight: FontWeight.w600,
                               color: isCompleted
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF0F172A),
+                                  ? AppColors.textDisabled
+                                  : AppColors.textPrimary,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -174,12 +175,10 @@ class StopTile extends StatelessWidget {
                                   vertical: isActive ? 4 : 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6).withAlpha(15),
+                                  color: AppColors.primary.withAlpha(15),
                                   borderRadius: BorderRadius.circular(7),
                                   border: Border.all(
-                                    color: const Color(
-                                      0xFF3B82F6,
-                                    ).withAlpha(35),
+                                    color: AppColors.primary.withAlpha(35),
                                     width: 1,
                                   ),
                                 ),
@@ -189,7 +188,7 @@ class StopTile extends StatelessWidget {
                                     Icon(
                                       Icons.people_alt_rounded,
                                       size: isActive ? 12 : 11,
-                                      color: const Color(0xFF3B82F6),
+                                      color: AppColors.primary,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -197,7 +196,7 @@ class StopTile extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: isActive ? 11.5 : 10.5,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF3B82F6),
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ],

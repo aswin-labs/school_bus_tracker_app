@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_stop_dialog.dart';
@@ -18,7 +19,6 @@ class StopListManagementBottomsheet extends StatefulWidget {
 class _StopListManagementBottomsheetState
     extends State<StopListManagementBottomsheet> {
   @override
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,7 +36,7 @@ class _StopListManagementBottomsheetState
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -56,7 +56,7 @@ class _StopListManagementBottomsheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -74,17 +74,17 @@ class _StopListManagementBottomsheetState
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppColors.inputBg,
                           borderRadius: BorderRadius.circular(11),
                           border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                            color: AppColors.border,
                             width: 1,
                           ),
                         ),
                         child: const Icon(
                           Icons.arrow_back_rounded,
                           size: 18,
-                          color: Color(0xFF0F172A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -94,17 +94,17 @@ class _StopListManagementBottomsheetState
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 17,
-                        color: const Color(0xFF0F172A),
+                        color: AppColors.textPrimary,
                         letterSpacing: 0.2,
                       ),
                     ),
                     const Spacer(),
-                    const SizedBox(width: 36), // Balance
+                    const SizedBox(width: 36),
                   ],
                 ),
               ),
 
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+              const Divider(height: 1, thickness: 1, color: AppColors.divider),
 
               // ── SCROLLABLE CONTENT ──────────────────────────
               Expanded(
@@ -113,7 +113,7 @@ class _StopListManagementBottomsheetState
                     if (provider.isLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF3B82F6),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -124,19 +124,19 @@ class _StopListManagementBottomsheetState
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+                          children: const [
                             Icon(
                               Icons.error_outline_rounded,
                               size: 64,
-                              color: Colors.grey[300],
+                              color: AppColors.textDisabled,
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                             Text(
                               'No Stops found',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -154,10 +154,10 @@ class _StopListManagementBottomsheetState
                             child: Container(
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: AppColors.inputBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
+                                  color: AppColors.border,
                                   width: 1.5,
                                 ),
                               ),
@@ -170,10 +170,7 @@ class _StopListManagementBottomsheetState
                                       gradient: const LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF3B82F6),
-                                          Color(0xFF2563EB),
-                                        ],
+                                        colors: AppColors.primaryColors,
                                       ),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
@@ -189,12 +186,12 @@ class _StopListManagementBottomsheetState
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        const Text(
                                           'ROUTE NAME',
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w700,
-                                            color: Colors.grey[500],
+                                            color: AppColors.textMuted,
                                             letterSpacing: 1.2,
                                           ),
                                         ),
@@ -209,7 +206,7 @@ class _StopListManagementBottomsheetState
                                               style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F172A),
+                                                color: AppColors.textPrimary,
                                                 letterSpacing: 0.2,
                                               ),
                                               maxLines: 2,
@@ -253,7 +250,7 @@ class _StopListManagementBottomsheetState
                                   width: 3,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6),
+                                    color: AppColors.primary,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
@@ -266,7 +263,7 @@ class _StopListManagementBottomsheetState
                                       .copyWith(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 15,
-                                        color: const Color(0xFF0F172A),
+                                        color: AppColors.textPrimary,
                                         letterSpacing: 0.2,
                                       ),
                                 ),
@@ -277,14 +274,10 @@ class _StopListManagementBottomsheetState
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF3B82F6,
-                                    ).withAlpha(20),
+                                    color: AppColors.primary.withAlpha(20),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const Color(
-                                        0xFF3B82F6,
-                                      ).withAlpha(60),
+                                      color: AppColors.primary.withAlpha(60),
                                       width: 1,
                                     ),
                                   ),
@@ -293,7 +286,7 @@ class _StopListManagementBottomsheetState
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF3B82F6),
+                                      color: AppColors.primary,
                                       letterSpacing: 0.3,
                                     ),
                                   ),

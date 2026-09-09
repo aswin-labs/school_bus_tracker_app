@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
@@ -11,11 +12,7 @@ class EditStopDialog extends StatefulWidget {
   final StopModel stop;
   final int routeId;
 
-  const EditStopDialog({
-    super.key,
-    required this.stop,
-    required this.routeId,
-  });
+  const EditStopDialog({super.key, required this.stop, required this.routeId});
 
   @override
   State<EditStopDialog> createState() => _EditStopDialogState();
@@ -69,10 +66,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
     if (!mounted) return;
 
     if (error == null) {
-      SnackbarHelper.showSuccess(
-        context,
-        message: 'Stop updated successfully',
-      );
+      SnackbarHelper.showSuccess(context, message: 'Stop updated successfully');
       Navigator.pop(context, true);
     } else {
       SnackbarHelper.showError(context, message: error);
@@ -85,7 +79,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
       child: Material(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         elevation: 12,
@@ -103,11 +97,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                    ),
+                    gradient: AppColors.primaryGradient,
                   ),
                   child: Row(
                     children: [
@@ -200,7 +190,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
                             label: liveProvider.isFetchingLocation
                                 ? "Fetching location..."
                                 : "Use Current Location",
-                            color: const Color(0xFF3B82F6),
+                            color: AppColors.primary,
                             isLoading: liveProvider.isFetchingLocation,
                             onTap: () async {
                               await liveProvider.fetchInitialLocation();
@@ -224,9 +214,9 @@ class _EditStopDialogState extends State<EditStopDialog> {
                       // Divider with "or"
                       Row(
                         children: [
-                          Expanded(
+                          const Expanded(
                             child: Divider(
-                              color: Colors.grey[300],
+                              color: AppColors.divider,
                               thickness: 1,
                             ),
                           ),
@@ -237,13 +227,13 @@ class _EditStopDialogState extends State<EditStopDialog> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.grey[500],
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Divider(
-                              color: Colors.grey[300],
+                              color: AppColors.divider,
                               thickness: 1,
                             ),
                           ),
@@ -255,7 +245,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
                       _LocationActionButton(
                         icon: Icons.map_rounded,
                         label: 'Select from Map',
-                        color: const Color(0xFF2563EB),
+                        color: AppColors.primaryDark,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -278,9 +268,9 @@ class _EditStopDialogState extends State<EditStopDialog> {
                                   ? null
                                   : _handleSubmit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3B82F6),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
-                                disabledBackgroundColor: Colors.grey[300],
+                                disabledBackgroundColor: AppColors.border,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 15,
@@ -298,14 +288,11 @@ class _EditStopDialogState extends State<EditStopDialog> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : Row(
+                                  : const Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(
-                                          Icons.save_rounded,
-                                          size: 20,
-                                        ),
+                                      children: [
+                                        Icon(Icons.save_rounded, size: 20),
                                         SizedBox(width: 10),
                                         Text(
                                           'Save Changes',
@@ -338,10 +325,10 @@ class _EditStopDialogState extends State<EditStopDialog> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withAlpha(15),
+            color: AppColors.primary.withAlpha(15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: const Color(0xFF3B82F6)),
+          child: Icon(icon, size: 16, color: AppColors.primary),
         ),
         const SizedBox(width: 8),
         Text(
@@ -349,7 +336,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
           style: const TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+            color: AppColors.textPrimary,
             letterSpacing: 0.3,
           ),
         ),
@@ -375,39 +362,39 @@ class _ModernInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+    return TextField(
+      controller: controller,
+      style: const TextStyle(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: Colors.grey[400]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0F172A),
-              ),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[400],
-                ),
-                isDense: true,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ],
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.cardBg,
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textDisabled,
+        ),
+        prefixIcon: Icon(icon, size: 18, color: AppColors.textDisabled),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
+        ),
       ),
     );
   }
@@ -426,14 +413,12 @@ class _LocationDisplay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: hasLocation
-            ? const Color(0xFF3B82F6).withAlpha(12)
-            : const Color(0xFFF8FAFC),
+        color: hasLocation ? AppColors.primary.withAlpha(12) : AppColors.cardBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: hasLocation
-              ? const Color(0xFF3B82F6).withAlpha(60)
-              : const Color(0xFFE2E8F0),
+              ? AppColors.primary.withAlpha(60)
+              : AppColors.border,
           width: 1.5,
         ),
       ),
@@ -444,7 +429,7 @@ class _LocationDisplay extends StatelessWidget {
                 ? Icons.check_circle_rounded
                 : Icons.location_off_rounded,
             size: 18,
-            color: hasLocation ? const Color(0xFF3B82F6) : Colors.grey[400],
+            color: hasLocation ? AppColors.primary : AppColors.textDisabled,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -455,7 +440,7 @@ class _LocationDisplay extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: hasLocation ? const Color(0xFF3B82F6) : Colors.grey[500],
+                color: hasLocation ? AppColors.primary : AppColors.textMuted,
                 letterSpacing: 0.2,
               ),
             ),

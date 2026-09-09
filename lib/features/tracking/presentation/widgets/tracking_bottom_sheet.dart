@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
 import 'package:school_bus_tracker/features/tracking/presentation/widgets/arrived_student_dialog.dart';
@@ -14,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 class TrackingBottomSheet extends StatelessWidget {
   const TrackingBottomSheet({
     super.key,
-    // required this.isPickup
     required this.sheetController,
     required this.minSize,
     required this.maxSize,
@@ -54,7 +54,7 @@ class TrackingBottomSheet extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -76,7 +76,7 @@ class TrackingBottomSheet extends StatelessWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -148,7 +148,7 @@ class TrackingBottomSheet extends StatelessWidget {
                               width: 3,
                               height: 16,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6),
+                                color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -158,7 +158,7 @@ class TrackingBottomSheet extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
+                                color: AppColors.textPrimary,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -169,7 +169,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF3B82F6).withAlpha(15),
+                                color: AppColors.primary.withAlpha(15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -177,7 +177,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF3B82F6),
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -226,7 +226,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 width: 3,
                                 height: 16,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF16A34A),
+                                  color: AppColors.success,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -236,7 +236,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F172A),
+                                  color: AppColors.textPrimary,
                                   letterSpacing: 0.2,
                                 ),
                               ),
@@ -247,7 +247,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF16A34A).withAlpha(15),
+                                  color: AppColors.success.withAlpha(15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -255,7 +255,7 @@ class TrackingBottomSheet extends StatelessWidget {
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF16A34A),
+                                    color: AppColors.success,
                                   ),
                                 ),
                               ),
@@ -298,59 +298,38 @@ class TrackingBottomSheet extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         child: Builder(
                           builder: (context) {
-                            // final isRouteCompleted =
-                            //     allStops.isNotEmpty &&
-                            //     allStops.every((s) => s.arrived == true);
-
                             return SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed:
-                                    // isRouteCompleted?
-                                    () async {
-                                      final routeId = context
-                                          .read<StopManagementProvider>()
-                                          .currentRouteId;
-                                      log(routeId.toString());
+                                onPressed: () async {
+                                  final routeId = context
+                                      .read<StopManagementProvider>()
+                                      .currentRouteId;
+                                  log(routeId.toString());
 
-                                      if (routeId == null) return;
+                                  if (routeId == null) return;
 
-                                      await context
-                                          .read<StopManagementProvider>()
-                                          .updateRouteInActive(
-                                            routeId: routeId,
-                                            context: context,
-                                          );
-                                    },
-                                // : null
+                                  await context
+                                      .read<StopManagementProvider>()
+                                      .updateRouteInActive(
+                                        routeId: routeId,
+                                        context: context,
+                                      );
+                                },
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
-                                  backgroundColor: const Color.fromARGB(
-                                    255,
-                                    13,
-                                    112,
-                                    233,
-                                  ),
-                                  // isRouteCompleted
-                                  //     ? const Color(0xFF16A34A)
-                                  //     : Colors.grey.shade300,
+                                  backgroundColor: AppColors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   "Mark Trip as Completed",
-                                  // isRouteCompleted
-                                  //     ? "Complete Route"
-                                  //     : "Complete all stops to finish",
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
-                                    // isRouteCompleted
-                                    //     ? Colors.white
-                                    //     : Colors.grey.shade600,
                                   ),
                                 ),
                               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bus_tracker/core/theme/app_colors.dart';
 
 class ResumeTripDialog extends StatefulWidget {
   final VoidCallback onResume;
@@ -80,7 +81,7 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                    colors: AppColors.primaryColors,
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
@@ -126,11 +127,10 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                                 ? null
                                 : widget.deactivateRoute,
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFF3B82F6)),
-                              foregroundColor: const Color(0xFF3B82F6),
-                              disabledForegroundColor: const Color(
-                                0xFF3B82F6,
-                              ).withAlpha(128),
+                              side: const BorderSide(color: AppColors.primary),
+                              foregroundColor: AppColors.primary,
+                              disabledForegroundColor: AppColors.primary
+                                  .withAlpha(128),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -143,7 +143,7 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF3B82F6),
+                                        AppColors.primary,
                                       ),
                                     ),
                                   )
@@ -163,11 +163,10 @@ class _ResumeTripDialogState extends State<ResumeTripDialog>
                                 ? null
                                 : widget.onResume,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(
-                                0xFF3B82F6,
-                              ).withAlpha(128),
+                              disabledBackgroundColor: AppColors.primary
+                                  .withAlpha(128),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
