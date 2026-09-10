@@ -12,12 +12,15 @@ class AppColors {
   // ── ROUTE TYPE COLORS ─────────────────────────────────────────────
   static const Color pickupColor = Color(0xFF2563EB);
   static const Color pickupColorDark = Color(0xFF1D4ED8);
-  static const Color dropColor = Color(0xFFF04545);
-  static const Color dropColorDark = Color(0xFFDC2626);
+  static const Color dropColor = Color(0xFF6366F1);
+  static const Color dropColorDark = Color(0xFF8B5CF6);
 
   // ── GRADIENT COLOR LISTS ─────────────────────────────────────────
   static const List<Color> primaryColors = [primary, primaryDark];
-  static const List<Color> primaryAccentColors = [Color(0xFF3B82F6), Color(0xFF6366F1)];
+  static const List<Color> primaryAccentColors = [
+    Color(0xFF3B82F6),
+    Color(0xFF6366F1),
+  ];
   static const List<Color> pickupColors = [pickupColor, pickupColorDark];
   static const List<Color> dropColors = [dropColor, dropColorDark];
 

@@ -721,6 +721,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                           studentName: student.fullName,
                                           guardianName: student.user?.name ?? '',
                                           phoneNumber: student.user?.phone,
+                                          className: student.classGrade?.classname,
                                           colorPair: colorPair,
                                           onDeleteTap: () =>
                                               _confirmDeleteStudent(student),

@@ -6,6 +6,7 @@ class StopTile extends StatelessWidget {
   final int priority;
   final int studentsCount;
   final bool isCompleted;
+  final DateTime? arrivedAt;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final bool isDeleting;
@@ -16,6 +17,7 @@ class StopTile extends StatelessWidget {
     required this.priority,
     required this.studentsCount,
     this.isCompleted = false,
+    this.arrivedAt,
     this.onTap,
     this.onDelete,
     this.isDeleting = false,
@@ -133,6 +135,41 @@ class StopTile extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (arrivedAt != null) ...[
+                            const SizedBox(width: 5),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withAlpha(10),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: AppColors.success.withAlpha(30),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.access_time_rounded,
+                                    size: 9,
+                                    color: AppColors.success.withAlpha(180),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    _formatTime(arrivedAt!),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.success.withAlpha(180),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ] else if (priority == 0) ...[
                           const SizedBox(width: 8),
                           Container(
@@ -256,5 +293,13 @@ class StopTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime utcTime) {
+    final local = utcTime.toLocal();
+    final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+    final minute = local.minute.toString().padLeft(2, '0');
+    final period = local.hour < 12 ? 'AM' : 'PM';
+    return '$hour:$minute $period';
   }
 }

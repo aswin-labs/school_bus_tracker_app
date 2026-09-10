@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class ArrivedStudentDialog extends StatefulWidget {
@@ -29,10 +30,15 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
     final provider = context.read<StopsProvider>();
     provider.clearSelection();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      provider.fetchSingleStop(
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final error = await provider.fetchSingleStop(
         stopId: widget.stopId,
         routeId: widget.routeId,
+      );
+      if (!mounted || error == null) return;
+      SnackbarHelper.showError(
+        context,
+        message: error,
       );
     });
   }
@@ -465,13 +471,22 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                       onPressed: provider.isSubmitting
                           ? null
                           : () async {
-                              final success = await provider
+                              final error = await provider
                                   .updateStopAndStudent(
                                     stopId: widget.stopId,
                                   );
                               if (!context.mounted) return;
-                              if (success) {
+                              if (error == null) {
+                                SnackbarHelper.showSuccess(
+                                  context,
+                                  message: 'Attendance submitted successfully!',
+                                );
                                 Navigator.pop(context);
+                              } else {
+                                SnackbarHelper.showError(
+                                  context,
+                                  message: error,
+                                );
                               }
                             },
                       style: ElevatedButton.styleFrom(

@@ -31,14 +31,11 @@ class StopServices {
     required double latitude,
     required double longitude,
   }) async {
-    final response = await ApiClient.put(
-      "${ApiEndpoints.updateStop}/$stopId",
-      {
-        "stop_name": stopName,
-        "latitude": latitude,
-        "longitude": longitude,
-      },
-    );
+    final response = await ApiClient.put("${ApiEndpoints.updateStop}/$stopId", {
+      "stop_name": stopName,
+      "latitude": latitude,
+      "longitude": longitude,
+    });
     return response;
   }
 
@@ -74,18 +71,25 @@ class StopServices {
   // PUT update stop and student
   Future<Response> updateStopAndStudent({
     required int stopId,
-    required List<int> studentIds,
+    List<int>? studentIds,
     required double latitude,
     required double longitude,
     required int routeId,
   }) async {
-    final response = await ApiClient.put(ApiEndpoints.updateStopAndStudent, {
+    final body = <String, dynamic>{
       "stop_id": stopId,
-      "student_ids": studentIds,
       "latitude": latitude,
       "longitude": longitude,
       "route_id": routeId,
-    });
+    };
+    if (studentIds != null) {
+      body["student_ids"] = studentIds;
+    }
+    body["student_ids"] = [];
+    final response = await ApiClient.put(
+      ApiEndpoints.updateStopAndStudent,
+      body,
+    );
     return response;
   }
 

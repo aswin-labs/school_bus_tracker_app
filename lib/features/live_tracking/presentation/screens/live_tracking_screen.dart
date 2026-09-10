@@ -490,12 +490,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                                   ? stop.stopPriority!.first.priority
                                   : stop.priority) ??
                               0;
+                          final arrivedAt =
+                              stop.stopLiveStatuses?.isNotEmpty == true
+                                  ? stop.stopLiveStatuses!.first.createdAt
+                                  : null;
 
                           return StopTile(
                             stopName: stop.stopName,
                             priority: priority,
                             studentsCount: studentsCount,
                             isCompleted: true,
+                            arrivedAt: arrivedAt,
                             onTap: () {
                               showDialog(
                                 context: context,

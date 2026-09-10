@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/network/google_map_api.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
-import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/select_location_map_screen.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/place_search_screen.dart';
 
 class AddStopDialog extends StatefulWidget {
   final int routeId;
@@ -270,18 +272,29 @@ class _AddStopDialogState extends State<AddStopDialog> {
                       const SizedBox(height: 10),
 
                       _LocationActionButton(
-                        icon: Icons.map_rounded,
-                        label: 'Select from Map',
-                        color: AppColors.primaryDark,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SelectLocationMapScreen(),
-                            ),
-                          );
-                        },
-                      ),
+                         icon: Icons.place_rounded,
+                         label: 'Search a Place',
+                         color: AppColors.primaryDark,
+                         onTap: () async {
+                           final result = await Navigator.push<LatLng>(
+                             context,
+                             MaterialPageRoute(
+                               builder: (_) => PlaceSearchScreen(
+                                 apiKey: GoogleMapApi.url,
+                                 initialLocation:
+                                     context
+                                         .read<StopsProvider>()
+                                         .selectedLocation,
+                               ),
+                             ),
+                           );
+                           if (result != null && context.mounted) {
+                             context
+                                 .read<StopsProvider>()
+                                 .setSelectedLocation(result);
+                           }
+                         },
+                       ),
 
                       const SizedBox(height: 24),
 

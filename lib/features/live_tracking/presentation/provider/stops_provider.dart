@@ -618,11 +618,12 @@ class StopsProvider extends ChangeNotifier {
   // Update Stop and Student (Mark Attendance / Arrived)
   // ---------------------------------------------------------------------------
 
-  Future<bool> updateStopAndStudent({required int stopId}) async {
-    if (_selectedStudentIds.isEmpty) return false;
-
+  Future<String?> updateStopAndStudent({required int stopId}) async {
     _isSubmitting = true;
     notifyListeners();
+
+    double latitude = 0.0;
+    double longitude = 0.0;
 
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -630,12 +631,21 @@ class StopsProvider extends ChangeNotifier {
           accuracy: LocationAccuracy.high,
         ),
       );
+      latitude = position.latitude;
+      longitude = position.longitude;
+    } catch (e) {
+      log('Geolocation unavailable, proceeding without coordinates: $e');
+      // Location blocked (e.g. Permissions Policy on web) — continue without coords
+    }
 
+    try {
       final response = await _stopServices.updateStopAndStudent(
         stopId: stopId,
-        studentIds: _selectedStudentIds.toList(),
-        latitude: position.latitude,
-        longitude: position.longitude,
+        studentIds: _selectedStudentIds.isEmpty
+            ? null
+            : _selectedStudentIds.toList(),
+        latitude: latitude,
+        longitude: longitude,
         routeId: _currentRouteId!,
       );
 
@@ -648,13 +658,17 @@ class StopsProvider extends ChangeNotifier {
           await fetchStopsByRouteId(_currentRouteId!);
         }
 
-        return true;
+        return null;
       }
 
-      return false;
+      return ApiErrorUtils.getErrorMessage(
+        data: response.data,
+        defaultMessage: 'Failed to submit attendance. Please try again.',
+        statusCode: response.statusCode,
+      );
     } catch (e, stackTrace) {
       log('Update stop and student error: $e', stackTrace: stackTrace);
-      return false;
+      return 'Failed to submit attendance. Please try again.';
     } finally {
       _isSubmitting = false;
       notifyListeners();

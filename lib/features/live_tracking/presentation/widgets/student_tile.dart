@@ -6,6 +6,7 @@ class StudentTile extends StatelessWidget {
   final String studentName;
   final String guardianName;
   final String? phoneNumber;
+  final String? className;
   final List<Color> colorPair;
   final VoidCallback? onPhoneTap;
   final VoidCallback? onDeleteTap;
@@ -16,6 +17,7 @@ class StudentTile extends StatelessWidget {
     required this.studentName,
     required this.guardianName,
     this.phoneNumber,
+    this.className,
     required this.colorPair,
     this.onPhoneTap,
     this.onDeleteTap,
@@ -95,6 +97,27 @@ class StudentTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (className != null && className!.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        className!,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                   if (hasGuardian) ...[
                     const SizedBox(height: 3),
                     Row(

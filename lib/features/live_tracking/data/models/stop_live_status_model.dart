@@ -5,6 +5,7 @@ class StopLiveStatusModel {
     String? longitude;
     int? routeId;
     int? stopId;
+    DateTime? createdAt;
     List<StudentsStopStatus>? studentsStopStatuses;
 
     StopLiveStatusModel({
@@ -12,6 +13,7 @@ class StopLiveStatusModel {
         this.longitude,
         this.routeId,
         this.stopId,
+        this.createdAt,
         this.studentsStopStatuses,
     });
 
@@ -20,6 +22,7 @@ class StopLiveStatusModel {
         longitude: json["longitude"],
         routeId: json["route_id"],
         stopId: json["stop_id"],
+        createdAt: json["createdAt"] == null ? null : DateTime.tryParse(json["createdAt"]),
         studentsStopStatuses: json["StudentsStopStatuses"] == null ? [] : List<StudentsStopStatus>.from(json["StudentsStopStatuses"]!.map((x) => StudentsStopStatus.fromJson(x))),
     );
 }

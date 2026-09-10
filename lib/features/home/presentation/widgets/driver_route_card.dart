@@ -28,19 +28,16 @@ class DriverRouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Colors based on Live vs Scheduled status
-    final liveColor = AppColors.success; // Emerald Green for Live
-    final primaryBlue = AppColors.primary; // Standard primary brand blue
+    // ── Primary identity: Pickup vs Drop ──────────────────────────
+    final routeColor = isPickup ? AppColors.pickupColor : AppColors.dropColor;
+    // final routeColorDark = isPickup
+    //     ? AppColors.pickupColorDark
+    //     : AppColors.dropColorDark;
+    final routeLabel = isPickup ? 'Pickup' : 'Drop';
+    final routeIcon = isPickup ? Icons.login_rounded : Icons.logout_rounded;
 
-    // Card border color: Subtle blue for scheduled, vibrant green glow for live
-    final borderColor = isLive
-        ? liveColor.withAlpha(200)
-        : primaryBlue.withAlpha(60);
-
-    // Route Type (Pickup vs Drop) colors
-    final pickupColor = AppColors.pickupColor; // Deep Blue for Pickup
-    final dropColor = AppColors.dropColor; // Warm Orange for Drop
-    final routeTypeColor = isPickup ? pickupColor : dropColor;
+    // ── Secondary indicator: Live status ─────────────────────────
+    final liveColor = AppColors.success;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -48,307 +45,343 @@ class DriverRouteCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: context.theme.cardColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: isLive ? 1.8 : 1.0),
-          boxShadow: isLive
-              ? [
-                  BoxShadow(
-                    color: liveColor.withAlpha(35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(6),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header Bar - Compact
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isLive
-                    ? liveColor.withAlpha(20)
-                    : primaryBlue.withAlpha(12),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(13),
-                  topRight: Radius.circular(13),
-                ),
-              ),
-              child: Row(
-                children: [
-                  // Live pulse dot vs Scheduled dot
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isLive ? liveColor : primaryBlue,
-                      shape: BoxShape.circle,
-                      boxShadow: isLive
-                          ? [
-                              BoxShadow(
-                                color: liveColor.withAlpha(140),
-                                blurRadius: 4,
-                                spreadRadius: 1.5,
-                              ),
-                            ]
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    isLive ? 'LIVE TRIP' : 'SCHEDULED',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: isLive ? liveColor : primaryBlue,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Route Type Badge (Pickup vs Drop)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: routeTypeColor.withAlpha(20),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: routeTypeColor.withAlpha(60),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isPickup
-                              ? Icons.north_east_rounded
-                              : Icons.south_west_rounded,
-                          size: 12,
-                          color: routeTypeColor,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          isPickup ? "Pickup" : "Drop",
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: routeTypeColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Card Body Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Route Title with icon
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: routeTypeColor.withAlpha(18),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.alt_route_rounded,
-                          size: 20,
-                          color: routeTypeColor,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          routeName,
-                          style: context.text.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Action Buttons Row: Stops & Students
-                  Row(
-                    children: [
-                      // Stops Button Action Card
-                      Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onStopsTap,
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 9,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.theme.canvasColor,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: context.theme.dividerColor.withAlpha(45),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    totalStops > 0
-                                        ? Icons.location_on_rounded
-                                        : Icons.add_location_alt_rounded,
-                                    size: 16,
-                                    color: primaryBlue,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      totalStops > 0
-                                          ? "$totalStops ${totalStops == 1 ? 'Stop' : 'Stops'}"
-                                          : "Add Stop",
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: totalStops > 0
-                                            ? context.text.bodyMedium?.color
-                                            : AppColors.primary,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 16,
-                                    color: context.theme.dividerColor,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Students Button Action Card
-                      Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onStudentsTap,
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 9,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.theme.canvasColor,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: context.theme.dividerColor.withAlpha(45),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.people_alt_rounded,
-                                    size: 16,
-                                    color: AppColors.pickupColor,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      totalStudents > 0
-                                          ? "$totalStudents ${totalStudents == 1 ? 'Student' : 'Students'}"
-                                          : "0 Students",
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: totalStudents > 0
-                                            ? context.text.bodyMedium?.color
-                                            : AppColors.textMuted,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 16,
-                                    color: context.theme.dividerColor,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Main Button Action (Start / Resume Trip)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onButtonTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLive ? liveColor : primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isLive
-                                ? Icons.play_circle_fill_rounded
-                                : Icons.navigation_rounded,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            isLive ? buttonTitle : "Start Trip",
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isLive ? liveColor.withAlpha(180) : routeColor.withAlpha(70),
+            width: isLive ? 1.8 : 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isLive
+                  ? liveColor.withAlpha(30)
+                  : routeColor.withAlpha(18),
+              blurRadius: isLive ? 14 : 8,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── LEFT ACCENT STRIPE ───────────────────────────
+                // Container(
+                //   width: 5,
+                //   decoration: BoxDecoration(
+                //     gradient: LinearGradient(
+                //       begin: Alignment.topCenter,
+                //       end: Alignment.bottomCenter,
+                //       colors: [routeColor, routeColorDark],
+                //     ),
+                //   ),
+                // ),
+
+                // ── CARD CONTENT ─────────────────────────────────
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ── HEADER ────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              routeColor.withAlpha(22),
+                              routeColor.withAlpha(8),
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Route type icon bubble
+                            Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: routeColor.withAlpha(25),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: routeColor.withAlpha(60),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Icon(
+                                routeIcon,
+                                size: 16,
+                                color: routeColor,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // Route type label
+                            Text(
+                              routeLabel.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: routeColor,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'ROUTE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: routeColor.withAlpha(160),
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            // Live badge (secondary)
+                            if (isLive)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: liveColor.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: liveColor.withAlpha(80),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: liveColor,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: liveColor.withAlpha(130),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: liveColor,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.textDisabled.withAlpha(15),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppColors.textDisabled.withAlpha(40),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  'SCHEDULED',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textSecondary.withAlpha(
+                                      180,
+                                    ),
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // ── BODY ─────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Route name
+                            Text(
+                              routeName,
+                              style: context.text.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // Stats row: Stops & Students
+                            Row(
+                              children: [
+                                // Stops
+                                Expanded(
+                                  child: _StatChip(
+                                    icon: totalStops > 0
+                                        ? Icons.location_on_rounded
+                                        : Icons.add_location_alt_rounded,
+                                    label: totalStops > 0
+                                        ? '$totalStops ${totalStops == 1 ? 'Stop' : 'Stops'}'
+                                        : 'Add Stop',
+                                    color: routeColor,
+                                    onTap: onStopsTap,
+                                    context: context,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Students
+                                Expanded(
+                                  child: _StatChip(
+                                    icon: Icons.people_alt_rounded,
+                                    label: totalStudents > 0
+                                        ? '$totalStudents ${totalStudents == 1 ? 'Student' : 'Students'}'
+                                        : '0 Students',
+                                    color: routeColor,
+                                    onTap: onStudentsTap,
+                                    context: context,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // CTA Button — colored by route type
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: onButtonTap,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isLive
+                                      ? liveColor
+                                      : routeColor,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 11,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      isLive
+                                          ? Icons.play_circle_fill_rounded
+                                          : routeIcon,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      isLive ? buttonTitle : 'Start Trip',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Reusable stat chip used for Stops & Students
+// ─────────────────────────────────────────────────────────────────
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  final BuildContext context;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.context,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          decoration: BoxDecoration(
+            color: color.withAlpha(10),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withAlpha(35), width: 1),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 15, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: color.withAlpha(200),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 15,
+                color: color.withAlpha(100),
+              ),
+            ],
+          ),
         ),
       ),
     );
