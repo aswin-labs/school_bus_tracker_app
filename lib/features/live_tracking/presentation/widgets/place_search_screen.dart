@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart'
     hide LatLng;
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/web_map/places_web_registrar.dart';
 
 /// A full-screen place-search + map confirmation screen.
 /// Returns a [LatLng] when the user confirms, or null if cancelled.
@@ -29,8 +31,9 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
 
   List<AutocompletePrediction> _predictions = [];
   bool _isSearching = false;
-  bool _showMap = false;
+  bool _showMap = true;
   bool _isFetchingDetails = false;
+  bool _isLocatingCurrent = false;
 
   LatLng? _selectedLatLng;
   String? _selectedPlaceName;
@@ -45,9 +48,14 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
   @override
   void initState() {
     super.initState();
+    ensurePlacesWebInitialized();
     _places = FlutterGooglePlacesSdk(widget.apiKey);
     _selectedLatLng = widget.initialLocation;
-    if (_selectedLatLng != null) _showMap = true;
+    _showMap = true;
+
+    if (_selectedLatLng == null) {
+      _fetchCurrentLocation();
+    }
 
     _searchController.addListener(_onSearchChanged);
   }
@@ -118,8 +126,13 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
           _showMap = true;
         });
         _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not determine location for this place')),
+        );
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error fetching place details: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not fetch place details')),
@@ -127,6 +140,41 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
       }
     } finally {
       if (mounted) setState(() => _isFetchingDetails = false);
+    }
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    setState(() => _isLocatingCurrent = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 8),
+        ),
+      );
+      if (mounted) {
+        final latLng = LatLng(pos.latitude, pos.longitude);
+        setState(() {
+          _selectedLatLng = latLng;
+          _selectedPlaceName = 'Current Location';
+          _showMap = true;
+        });
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(latLng, 16),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error getting current location: $e');
+    } finally {
+      if (mounted) setState(() => _isLocatingCurrent = false);
     }
   }
 
@@ -229,7 +277,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                     child: TextField(
                       controller: _searchController,
                       focusNode: _focusNode,
-                      autofocus: widget.initialLocation == null,
+                      autofocus: false,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -387,6 +435,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                                           ),
                                         ),
                                       },
+                                myLocationEnabled: true,
                                 myLocationButtonEnabled: false,
                                 zoomControlsEnabled: false,
                                 mapToolbarEnabled: false,
@@ -431,6 +480,32 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                                       ),
                                     ],
                                   ),
+                                ),
+                              ),
+
+                              // Floating My Location Button
+                              Positioned(
+                                bottom: 16,
+                                right: 16,
+                                child: FloatingActionButton.small(
+                                  heroTag: 'places_my_location_btn',
+                                  onPressed: _fetchCurrentLocation,
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.primary,
+                                  elevation: 4,
+                                  child: _isLocatingCurrent
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.primary,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.my_location_rounded,
+                                          size: 20,
+                                        ),
                                 ),
                               ),
                             ],
