@@ -457,7 +457,9 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                             ),
                                             border: Border.all(
                                               color: isSelected
-                                                  ? AppColors.primary.withAlpha(120)
+                                                  ? AppColors.primary.withAlpha(
+                                                      120,
+                                                    )
                                                   : AppColors.border,
                                               width: 1,
                                             ),
@@ -476,11 +478,16 @@ class _AssignPairStopsDialogState extends State<AssignPairStopsDialog> {
                                             ),
                                             decoration: const InputDecoration(
                                               isDense: true,
+                                              filled: false,
+                                              fillColor: Colors.transparent,
                                               border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 6,
-                                                  ),
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              disabledBorder: InputBorder.none,
+                                              errorBorder: InputBorder.none,
+                                              focusedErrorBorder:
+                                                  InputBorder.none,
+                                              contentPadding: EdgeInsets.zero,
                                             ),
                                           ),
                                         ),

@@ -4,12 +4,11 @@ import 'package:school_bus_tracker/features/auth/presentation/provider/auth_prov
 import 'package:school_bus_tracker/features/home/data/services/route_services.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/services/stops_services.dart';
-import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/directions_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/map_rendering_provider.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/provider/stop_management_provider.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
+import 'package:school_bus_tracker/features/settings/data/services/settings_services.dart';
+import 'package:school_bus_tracker/features/settings/presentation/provider/settings_provider.dart';
 
 getProviders() {
   return [
@@ -24,10 +23,8 @@ getProviders() {
 
     // route provider
     ChangeNotifierProxyProvider<StopsProvider, RouteProvider>(
-      create: (context) => RouteProvider(
-        RouteServices(),
-        context.read<StopsProvider>(),
-      ),
+      create: (context) =>
+          RouteProvider(RouteServices(), context.read<StopsProvider>()),
       update: (context, stopsProvider, routeProvider) {
         if (routeProvider != null) {
           routeProvider.updateStopsProvider(stopsProvider);
@@ -37,17 +34,12 @@ getProviders() {
       },
     ),
 
-    ChangeNotifierProvider(
-      create: (_) {
-        final provider = LiveLocationProvider();
-        provider.fetchInitialLocation();
-        return provider;
-      },
-    ),
+    ChangeNotifierProvider(create: (_) => LiveLocationProvider()),
 
-    ChangeNotifierProvider(create: (_) => StopManagementProvider()),
-    ChangeNotifierProvider(create: (_) => MapRenderingProvider()),
-    ChangeNotifierProvider(create: (_) => DirectionsProvider()),
+    // ChangeNotifierProvider(create: (_) => StopManagementProvider()),
+    // ChangeNotifierProvider(create: (_) => MapRenderingProvider()),
+    // ChangeNotifierProvider(create: (_) => DirectionsProvider()),
     ChangeNotifierProvider(create: (_) => StudentProvider()),
+    ChangeNotifierProvider(create: (_) => SettingsProvider(SettingsServices())),
   ];
 }

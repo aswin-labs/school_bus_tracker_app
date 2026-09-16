@@ -5,7 +5,6 @@ import 'package:school_bus_tracker/features/auth/presentation/screens/login_scre
 import 'package:school_bus_tracker/features/home/presentation/screens/driver_home_screen.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/screens/live_tracking_screen.dart';
 import 'package:school_bus_tracker/features/settings/presentation/screens/settings_screen.dart';
-import 'package:school_bus_tracker/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -22,10 +21,7 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const SizedBox.shrink(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const SizedBox.shrink()),
 
     // login
     GoRoute(
@@ -48,15 +44,15 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => SettingsScreen(),
     ),
 
-    // tracking
-    GoRoute(
-      path: '/trackingScreen',
-      name: RouterConstants.trackingScreen,
-      builder: (context, state) {
-        final routeId = state.extra as int;
-        return TrackingScreen(routeId: routeId);
-      },
-    ),
+    // // tracking
+    // GoRoute(
+    //   path: '/trackingScreen',
+    //   name: RouterConstants.trackingScreen,
+    //   builder: (context, state) {
+    //     final routeId = state.extra as int;
+    //     return TrackingScreen(routeId: routeId);
+    //   },
+    // ),
 
     // live tracking screen
     GoRoute(

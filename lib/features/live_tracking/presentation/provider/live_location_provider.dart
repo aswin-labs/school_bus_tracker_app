@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:school_bus_tracker/core/utils/location_helper.dart';
 
 class LiveLocationProvider extends ChangeNotifier {
   LatLng? currentLocation;
@@ -17,34 +18,8 @@ class LiveLocationProvider extends ChangeNotifier {
     isFetchingLocation = true;
     notifyListeners();
 
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      isFetchingLocation = false;
-      notifyListeners();
-      return;
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      isFetchingLocation = false;
-      notifyListeners();
-      return;
-    }
-
     try {
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
-
+      final pos = await LocationHelper.getCurrentPosition();
       currentLocation = LatLng(pos.latitude, pos.longitude);
     } catch (e) {
       debugPrint("Location fetch error: $e");
@@ -57,25 +32,26 @@ class LiveLocationProvider extends ChangeNotifier {
   Future<void> startTracking() async {
     if (trackingStarted) return;
 
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    final status = await LocationHelper.ensurePermission();
+    if (status != LocationPermissionStatus.granted) {
       return;
     }
 
     trackingStarted = true;
 
-    _stream =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
+    final locationSettings = kIsWeb
+        ? WebSettings(
             accuracy: LocationAccuracy.high,
             distanceFilter: 5,
-          ),
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 5,
+          );
+
+    _stream =
+        Geolocator.getPositionStream(
+          locationSettings: locationSettings,
         ).listen((pos) {
           final point = LatLng(pos.latitude, pos.longitude);
           currentLocation = point;

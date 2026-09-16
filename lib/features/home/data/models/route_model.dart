@@ -9,6 +9,7 @@ class RouteModel {
   bool? isLock;
   int? pickupId;
   int? totalStops;
+  int? stopUnassignedStudentsCount;
 
   RouteModel({
     required this.id,
@@ -21,6 +22,7 @@ class RouteModel {
     this.isLock,
     this.pickupId,
     this.totalStops,
+    this.stopUnassignedStudentsCount,
   });
 
   factory RouteModel.fromJson(Map<String, dynamic> json) => RouteModel(
@@ -36,6 +38,9 @@ class RouteModel {
     isLock: json["isLock"],
     pickupId: json["pickId"],
     totalStops: json["total_stops"],
+    stopUnassignedStudentsCount: json["StopUnAssignedStudents"] != null
+        ? int.tryParse(json["StopUnAssignedStudents"].toString())
+        : null,
   );
 
   @override

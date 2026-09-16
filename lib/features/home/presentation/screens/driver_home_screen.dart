@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/extensions/context_extensions.dart';
@@ -11,10 +12,10 @@ import 'package:school_bus_tracker/core/widgets/shimmer/shimmer_list.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/driver_route_card.dart';
-import 'package:school_bus_tracker/features/home/presentation/widgets/drop_stop_preview_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/resume_trip_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/route_students_dialog.dart';
 import 'package:school_bus_tracker/features/home/presentation/widgets/start_journey_dialog.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/unassigned_students_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/stops_management_bottomsheet.dart';
 import 'package:school_bus_tracker/routes/router_constants.dart';
 
@@ -26,6 +27,8 @@ class DriverHomeScreen extends StatefulWidget {
 }
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
+  DateTime? _lastBackPressTime;
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +76,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
 
     final isLive = route.active == true;
-    final isPickup = route.type == 'PICKUP';
+    // final isPickup = route.type == 'PICKUP';
     final hasStops = (route.totalStops ?? 0) > 0;
 
     if (hasActiveRoute && !isLive) {
@@ -101,17 +104,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
     // 2. No active route
     if (!hasActiveRoute) {
-      if (isPickup) {
-        _showStartDialog(route);
-        return;
-      }
+      // if (isPickup) {
+      _showStartDialog(route);
+      return;
+      // }
 
-      // Drop route
-      if (!hasStops) {
-        _showDropPreview(route);
-      } else {
-        _showStartDialog(route);
-      }
+      // // Drop route
+      // if (!hasStops) {
+      //   _showDropPreview(route);
+      // } else {
+      //   _showStartDialog(route);
+      // }
     }
   }
 
@@ -191,16 +194,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
-  // show drop preview dialog
-  void _showDropPreview(RouteModel route) {
-    showDialog(
-      context: context,
-      builder: (_) => DropStopsPreviewDialog(
-        pickupRouteId: route.pickupId ?? 0,
-        dropRouteId: route.id,
-      ),
-    );
-  }
+  // // show drop preview dialog
+  // void _showDropPreview(RouteModel route) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => DropStopsPreviewDialog(
+  //       pickupRouteId: route.pickupId ?? 0,
+  //       dropRouteId: route.id,
+  //     ),
+  //   );
+  // }
 
   // show route students dialog
   void _showRouteStudentsDialog(RouteModel route) {
@@ -213,195 +216,229 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
+  // show unassigned students dialog
+  void _showUnassignedStudentsDialog(RouteModel route) {
+    showDialog(
+      context: context,
+      builder: (_) => UnassignedStudentsDialog(
+        routeId: route.id,
+        routeName: route.routeName ?? 'Unassigned Students',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: context.theme.canvasColor,
-        automaticallyImplyLeading: false,
-        toolbarHeight: 70,
-        title: Row(
-          children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        final now = DateTime.now();
+        if (_lastBackPressTime == null ||
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          SnackbarHelper.showInfo(context, message: 'Click back again to exit');
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: context.theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: context.theme.canvasColor,
+          automaticallyImplyLeading: false,
+          toolbarHeight: 70,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.directions_bus_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(getDayGreeting(), style: context.text.titleLarge),
+                    const SizedBox(height: 2),
+                    Text(
+                      getCurrentDate(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
             Container(
-              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: context.theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.directions_bus_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(getDayGreeting(), style: context.text.titleLarge),
-                  const SizedBox(height: 2),
-                  Text(
-                    getCurrentDate(),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              child: IconButton(
+                onPressed: () =>
+                    context.pushNamed(RouterConstants.settingsScreen),
+                icon: const Icon(Icons.settings_outlined),
+                color: context.theme.iconTheme.color,
               ),
             ),
           ],
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: context.theme.cardColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              onPressed: () =>
-                  context.pushNamed(RouterConstants.settingsScreen),
-              icon: const Icon(Icons.settings_outlined),
-              color: context.theme.iconTheme.color,
-            ),
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(color: context.theme.canvasColor),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Consumer<RouteProvider>(
-            builder: (context, provider, _) {
-              return RefreshIndicator(
-                onRefresh: _loadRoutes,
-                color: AppColors.primary,
-                child: CustomScrollView(
-                  slivers: [
-                    // Stats Section
-                    SliverToBoxAdapter(
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 20),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: AppColors.primaryColors,
+        body: Container(
+          decoration: BoxDecoration(color: context.theme.canvasColor),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Consumer<RouteProvider>(
+              builder: (context, provider, _) {
+                return RefreshIndicator(
+                  onRefresh: _loadRoutes,
+                  color: AppColors.primary,
+                  child: CustomScrollView(
+                    slivers: [
+                      // Stats Section
+                      SliverToBoxAdapter(
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: AppColors.primaryColors,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withAlpha(20),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withAlpha(20),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildQuickStat(
-                                icon: Icons.route_rounded,
-                                label: 'Total Routes',
-                                value: provider.driverRoutes.length.toString(),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildQuickStat(
+                                  icon: Icons.route_rounded,
+                                  label: 'Total Routes',
+                                  value: provider.driverRoutes.length
+                                      .toString(),
+                                ),
                               ),
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: Colors.white.withAlpha(77),
-                            ),
-                            Expanded(
-                              child: _buildQuickStat(
-                                icon: Icons.directions_bus_filled,
-                                label: 'Active Now',
-                                value: provider.driverRoutes
-                                    .where((r) => r.active == true)
-                                    .length
-                                    .toString(),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.white.withAlpha(77),
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: _buildQuickStat(
+                                  icon: Icons.directions_bus_filled,
+                                  label: 'Active Now',
+                                  value: provider.driverRoutes
+                                      .where((r) => r.active == true)
+                                      .length
+                                      .toString(),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Section Header
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Today's Routes",
-                              style: context.text.titleLarge,
-                            ),
-                            if (provider.driverRoutes.isNotEmpty)
+                      // Section Header
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Text(
-                                '${provider.driverRoutes.length} ${provider.driverRoutes.length == 1 ? 'Route' : 'Routes'}',
-                                style: context.text.titleMedium,
+                                "All Routes",
+                                style: context.text.titleLarge,
                               ),
-                          ],
+                              if (provider.driverRoutes.isNotEmpty)
+                                Text(
+                                  '${provider.driverRoutes.length} ${provider.driverRoutes.length == 1 ? 'Route' : 'Routes'}',
+                                  style: context.text.titleMedium,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    if (provider.isLoading)
-                      ShimmerList(itemHeight: 20.hp, itemCount: 3)
-                    else if (provider.driverRoutes.isEmpty)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: const CommonEmptyState(
-                          icon: Icons.event_busy_rounded,
-                          title: 'No Routes Today',
-                          message:
-                              'You don\'t have any assigned routes for today. Check back later.',
+                      if (provider.isLoading)
+                        ShimmerList(itemHeight: 20.hp, itemCount: 3)
+                      else if (provider.driverRoutes.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: const CommonEmptyState(
+                            icon: Icons.event_busy_rounded,
+                            title: 'No Routes Today',
+                            message:
+                                'You don\'t have any assigned routes for today. Check back later.',
+                          ),
+                        )
+                      else
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final routes = _getSortedRoutes(
+                              provider.driverRoutes,
+                            );
+                            final route = routes[index];
+
+                            final isPickup = route.type == 'PICKUP';
+                            final isLive = route.active == true;
+
+                            return DriverRouteCard(
+                              routeName: route.routeName ?? "Unknown Route",
+                              totalStops: route.totalStops ?? 0,
+                              totalStudents: route.totalStudents ?? 0,
+                              stopUnassignedStudentsCount:
+                                  route.stopUnassignedStudentsCount ?? 0,
+                              onStudentsTap: () =>
+                                  _showRouteStudentsDialog(route),
+                              onUnassignedStudentsTap: () =>
+                                  _showUnassignedStudentsDialog(route),
+                              onStopsTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return StopsManagementBottomsheet(
+                                      routeId: route.id,
+                                    );
+                                  },
+                                );
+                              },
+                              isLive: isLive,
+                              isPickup: isPickup,
+                              onButtonTap: () => _handleRouteTap(route),
+                            );
+                          }, childCount: provider.driverRoutes.length),
                         ),
-                      )
-                    else
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final routes = _getSortedRoutes(
-                            provider.driverRoutes,
-                          );
-                          final route = routes[index];
-
-                          final isPickup = route.type == 'PICKUP';
-                          final isLive = route.active == true;
-
-                          return DriverRouteCard(
-                            routeName: route.routeName ?? "Unknown Route",
-                            totalStops: route.totalStops ?? 0,
-                            totalStudents: route.totalStudents ?? 0,
-                            onStudentsTap: () =>
-                                _showRouteStudentsDialog(route),
-                            onStopsTap: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) {
-                                  return StopsManagementBottomsheet(
-                                    routeId: route.id,
-                                  );
-                                },
-                              );
-                            },
-                            isLive: isLive,
-                            isPickup: isPickup,
-                            onButtonTap: () => _handleRouteTap(route),
-                          );
-                        }, childCount: provider.driverRoutes.length),
-                      ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

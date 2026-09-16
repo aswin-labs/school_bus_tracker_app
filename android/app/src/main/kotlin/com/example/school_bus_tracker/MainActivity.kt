@@ -1,4 +1,4 @@
-package com.example.school_bus_tracker
+package com.acadobs.tracker
 
 import io.flutter.embedding.android.FlutterActivity
 

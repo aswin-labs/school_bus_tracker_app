@@ -1,93 +1,93 @@
-import 'dart:async';
-import 'dart:developer';
+// import 'dart:async';
+// import 'dart:developer';
 
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
+// import 'package:flutter/material.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:school_bus_tracker/features/tracking/data/models/stop_model.dart';
 
-class MapRenderingProvider extends ChangeNotifier {
-  GoogleMapController? controller;
-  BitmapDescriptor? busIcon;
+// class MapRenderingProvider extends ChangeNotifier {
+//   GoogleMapController? controller;
+//   BitmapDescriptor? busIcon;
 
-  final Completer<void> _readyCompleter = Completer<void>();
-  Future<void> get ready => _readyCompleter.future;
+//   final Completer<void> _readyCompleter = Completer<void>();
+//   Future<void> get ready => _readyCompleter.future;
 
-  final Set<Marker> markers = {};
-  final Set<Polyline> polylines = {};
+//   final Set<Marker> markers = {};
+//   final Set<Polyline> polylines = {};
 
-  Future<void> init(GoogleMapController c) async {
-    controller = c;
+//   Future<void> init(GoogleMapController c) async {
+//     controller = c;
 
-    busIcon ??= await BitmapDescriptor.asset(
-      const ImageConfiguration(size: Size(48, 48), devicePixelRatio: 3),
-      'assets/icons/bus.png',
-    );
+//     busIcon ??= await BitmapDescriptor.asset(
+//       const ImageConfiguration(size: Size(48, 48), devicePixelRatio: 3),
+//       'assets/icons/bus.png',
+//     );
 
-    if (!_readyCompleter.isCompleted) {
-      _readyCompleter.complete();
-    }
-  }
+//     if (!_readyCompleter.isCompleted) {
+//       _readyCompleter.complete();
+//     }
+//   }
 
-  Future<void> updateBus(LatLng position) async {
-    await ready;
-    log("busIcon is null? ${busIcon == null}");
-    log("controller is null? ${controller == null}");
-    markers.removeWhere((m) => m.markerId.value == 'bus');
+//   Future<void> updateBus(LatLng position) async {
+//     await ready;
+//     log("busIcon is null? ${busIcon == null}");
+//     log("controller is null? ${controller == null}");
+//     markers.removeWhere((m) => m.markerId.value == 'bus');
 
-    markers.add(
-      Marker(
-        markerId: const MarkerId('bus'),
-        position: position,
-        icon: busIcon!,
-        anchor: const Offset(0.5, 0.5),
-        flat: true,
-      ),
-    );
+//     markers.add(
+//       Marker(
+//         markerId: const MarkerId('bus'),
+//         position: position,
+//         icon: busIcon!,
+//         anchor: const Offset(0.5, 0.5),
+//         flat: true,
+//       ),
+//     );
 
-    notifyListeners();
-  }
+//     notifyListeners();
+//   }
 
-  void updateStops(List<StopModel> stops) {
-    markers.removeWhere((m) => m.markerId.value.startsWith('stop_'));
+//   void updateStops(List<StopModel> stops) {
+//     markers.removeWhere((m) => m.markerId.value.startsWith('stop_'));
 
-    for (final s in stops) {
-      markers.add(
-        Marker(
-          markerId: MarkerId('stop_${s.priority}'),
-          position: LatLng(s.latitude, s.longitude),
-          infoWindow: InfoWindow(title: s.stopName),
-        ),
-      );
-    }
-    notifyListeners();
-  }
+//     for (final s in stops) {
+//       markers.add(
+//         Marker(
+//           markerId: MarkerId('stop_${s.priority}'),
+//           position: LatLng(s.latitude, s.longitude),
+//           infoWindow: InfoWindow(title: s.stopName),
+//         ),
+//       );
+//     }
+//     notifyListeners();
+//   }
 
-  void updatePolyline(List<LatLng> points) {
-    polylines
-      ..clear()
-      ..add(
-        Polyline(
-          polylineId: const PolylineId('route'),
-          points: points,
-          width: 6,
-          color: Colors.blue,
-        ),
-      );
-    notifyListeners();
-  }
+//   void updatePolyline(List<LatLng> points) {
+//     polylines
+//       ..clear()
+//       ..add(
+//         Polyline(
+//           polylineId: const PolylineId('route'),
+//           points: points,
+//           width: 6,
+//           color: Colors.blue,
+//         ),
+//       );
+//     notifyListeners();
+//   }
 
-  Future<void> moveTo(LatLng position, {double zoom = 17}) async {
-    await ready;
-    await controller?.animateCamera(CameraUpdate.newLatLngZoom(position, zoom));
-  }
+//   Future<void> moveTo(LatLng position, {double zoom = 17}) async {
+//     await ready;
+//     await controller?.animateCamera(CameraUpdate.newLatLngZoom(position, zoom));
+//   }
 
-  void clearPolylines() {
-    polylines.clear();
-    notifyListeners();
-  }
+//   void clearPolylines() {
+//     polylines.clear();
+//     notifyListeners();
+//   }
 
-  void clearMarkers() {
-    markers.clear();
-    notifyListeners();
-  }
-}
+//   void clearMarkers() {
+//     markers.clear();
+//     notifyListeners();
+//   }
+// }

@@ -69,4 +69,16 @@ class ApiEndpoints {
 
   // delete stop by id
   static const deleteStop = "/driver/deleteStopById";
+
+  // ---------------------PROFILE / SETTINGS-----------------------
+  // get transport staff profile and school details
+  static const getMyProfileAndSchoolDetails =
+      "/driver/getMyProfileAndSchoolDetails";
+
+  // update transport staff profile details
+  static const updateOwnProfileForDriver =
+      "/driver/updateOwnProfileForDriver";
+
+  // update transport staff profile picture (dp)
+  static const updateDp = "/driver/updateDp";
 }

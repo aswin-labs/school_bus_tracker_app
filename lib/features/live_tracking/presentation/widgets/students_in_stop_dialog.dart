@@ -32,11 +32,15 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final dialogHeight = (screenHeight * 0.6).clamp(420.0, 480.0);
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 380),
+        width: 380,
+        height: dialogHeight,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
@@ -49,7 +53,6 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             // ── HEADER ──────────────────────────────────────────────
             Container(
@@ -217,8 +220,7 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
             ),
 
             // ── STUDENT LIST ─────────────────────────────────────────
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 280),
+            Expanded(
               child: Consumer<StopsProvider>(
                 builder: (context, provider, _) {
                   final students = provider.students;
@@ -231,17 +233,17 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                   }
 
                   if (students.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 32),
+                    return const Center(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.people_outline_rounded,
-                            size: 36,
+                            size: 38,
                             color: AppColors.textDisabled,
                           ),
-                          const SizedBox(height: 10),
-                          const Text(
+                          SizedBox(height: 10),
+                          Text(
                             'No students at this stop',
                             style: TextStyle(
                               fontSize: 13,
@@ -257,7 +259,6 @@ class _StudentsInStopDialogState extends State<StudentsInStopDialog> {
                   final avatarColors = AppColors.avatarColorPairs;
 
                   return ListView.separated(
-                    shrinkWrap: true,
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                     itemCount: students.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),

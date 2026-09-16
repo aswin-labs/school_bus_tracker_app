@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart'
     hide LatLng;
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
+import 'package:school_bus_tracker/core/utils/location_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/web_map/places_web_registrar.dart';
 
 /// A full-screen place-search + map confirmation screen.
@@ -146,20 +146,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
   Future<void> _fetchCurrentLocation() async {
     setState(() => _isLocatingCurrent = true);
     try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 8),
-        ),
-      );
+      final pos = await LocationHelper.getCurrentPosition();
       if (mounted) {
         final latLng = LatLng(pos.latitude, pos.longitude);
         setState(() {

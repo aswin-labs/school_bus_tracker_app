@@ -12,6 +12,8 @@ class DriverRouteCard extends StatelessWidget {
   final bool isPickup;
   final int totalStops;
   final int totalStudents;
+  final int stopUnassignedStudentsCount;
+  final VoidCallback? onUnassignedStudentsTap;
 
   const DriverRouteCard({
     super.key,
@@ -19,11 +21,13 @@ class DriverRouteCard extends StatelessWidget {
     required this.onStopsTap,
     required this.onButtonTap,
     this.onStudentsTap,
+    this.onUnassignedStudentsTap,
     this.buttonTitle = 'Resume Trip',
     this.isLive = true,
     this.isPickup = true,
     this.totalStops = 0,
     this.totalStudents = 0,
+    this.stopUnassignedStudentsCount = 0,
   });
 
   @override
@@ -271,6 +275,66 @@ class DriverRouteCard extends StatelessWidget {
                                 ),
                               ],
                             ),
+
+                            // Unassigned Students alert banner (if > 0)
+                            if (stopUnassignedStudentsCount > 0) ...[
+                              const SizedBox(height: 8),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: onUnassignedStudentsTap,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 7,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.warning.withAlpha(18),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: AppColors.warning.withAlpha(70),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                AppColors.warning.withAlpha(35),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.person_add_alt_1_rounded,
+                                            size: 13,
+                                            color: AppColors.warningDark,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            '$stopUnassignedStudentsCount new student${stopUnassignedStudentsCount == 1 ? '' : 's'} with no stops',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.warningDark,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 16,
+                                          color: AppColors.warningDark,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
 
                             const SizedBox(height: 10),
 

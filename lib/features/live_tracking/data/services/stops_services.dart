@@ -81,11 +81,9 @@ class StopServices {
       "latitude": latitude,
       "longitude": longitude,
       "route_id": routeId,
+      "student_ids": studentIds ?? [],
     };
-    if (studentIds != null) {
-      body["student_ids"] = studentIds;
-    }
-    body["student_ids"] = [];
+
     final response = await ApiClient.put(
       ApiEndpoints.updateStopAndStudent,
       body,

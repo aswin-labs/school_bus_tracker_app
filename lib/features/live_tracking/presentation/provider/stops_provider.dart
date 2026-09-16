@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/core/utils/api_error_utils.dart';
+import 'package:school_bus_tracker/core/utils/location_helper.dart';
 import 'package:school_bus_tracker/features/home/data/models/route_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
@@ -626,16 +626,28 @@ class StopsProvider extends ChangeNotifier {
     double longitude = 0.0;
 
     try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
+      final position = await LocationHelper.getCurrentPosition();
       latitude = position.latitude;
       longitude = position.longitude;
     } catch (e) {
-      log('Geolocation unavailable, proceeding without coordinates: $e');
-      // Location blocked (e.g. Permissions Policy on web) — continue without coords
+      log('Could not obtain current location: $e');
+
+      // If location permission was explicitly denied or permanently blocked, inform user
+      if (e is LocationException &&
+          e.status != null &&
+          e.status != LocationPermissionStatus.granted) {
+        _isSubmitting = false;
+        notifyListeners();
+        return e.message;
+      }
+
+      // Fallback: If stop has pre-configured coordinates, use them instead of 0.0
+      try {
+        final currentStop = _stops.firstWhere((s) => s.id == stopId);
+        latitude = currentStop.latitude;
+        longitude = currentStop.longitude;
+        log('Using stop coordinates as fallback: $latitude, $longitude');
+      } catch (_) {}
     }
 
     try {
@@ -679,24 +691,14 @@ class StopsProvider extends ChangeNotifier {
   // Live Location Sharing
   // ---------------------------------------------------------------------------
 
-  Future<void> startLiveLocationSharing(int routeId) async {
-    if (_isSharingLocation) return;
+  Future<String?> startLiveLocationSharing(int routeId) async {
+    if (_isSharingLocation) return null;
 
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      log("Location services are disabled.");
-      return;
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      log("Location permissions are denied.");
-      return;
+    final status = await LocationHelper.ensurePermission();
+    if (status != LocationPermissionStatus.granted) {
+      final msg = LocationHelper.getPermissionErrorMessage(status);
+      log("Location permissions not granted: $msg");
+      return msg;
     }
 
     _locationTimer?.cancel();
@@ -707,34 +709,21 @@ class StopsProvider extends ChangeNotifier {
     // Send immediately
     await _sendLiveLocation(routeId);
 
-    if (!_isSharingLocation) return;
+    if (!_isSharingLocation) return null;
 
     // Periodic every 20s
     _locationTimer = Timer.periodic(
       const Duration(seconds: 20),
       (_) => _sendLiveLocation(routeId),
     );
+    return null;
   }
 
   Future<void> _sendLiveLocation(int routeId) async {
     if (!_isSharingLocation) return;
 
     try {
-      late LocationSettings locationSettings;
-      if (kIsWeb) {
-        locationSettings = WebSettings(
-          accuracy: LocationAccuracy.high,
-          maximumAge: const Duration(seconds: 5),
-        );
-      } else {
-        locationSettings = const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        );
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: locationSettings,
-      );
+      final position = await LocationHelper.getCurrentPosition();
 
       if (!_isSharingLocation) return;
 

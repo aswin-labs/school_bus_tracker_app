@@ -43,7 +43,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     final error = await provider.fetchStopsByRouteId(widget.routeId);
 
     if (mounted && error == null) {
-      provider.startLiveLocationSharing(widget.routeId);
+      final locationError =
+          await provider.startLiveLocationSharing(widget.routeId);
+      if (mounted && locationError != null) {
+        SnackbarHelper.showInfo(context, message: locationError);
+      }
     }
 
     if (!mounted || error == null) return;
