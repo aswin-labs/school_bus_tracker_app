@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Username
                 const Text(
-                  'Username',
+                  'Phone Number',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -114,14 +114,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _usernameController,
                   validator: (value) => value?.trim().isEmpty ?? true
-                      ? 'Username is required'
+                      ? 'Phone number is required'
                       : null,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Enter your username',
+                    hintText: 'Enter your phone number',
                     hintStyle: const TextStyle(color: AppColors.textMuted),
                     prefixIcon: const Icon(
                       Icons.person_outline,

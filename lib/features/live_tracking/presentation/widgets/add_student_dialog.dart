@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/student_details_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
 
@@ -20,6 +21,8 @@ class AddStudentDialog extends StatefulWidget {
 }
 
 class _AddStudentDialogState extends State<AddStudentDialog> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -33,10 +36,25 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
         SnackbarHelper.showError(context, message: error);
       }
     });
+
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 150) {
+      final provider = context.read<StudentProvider>();
+      if (provider.hasMore &&
+          !provider.isLoadingMore &&
+          !provider.isLoading) {
+        provider.loadMoreStudents(routeId: widget.routeId);
+      }
+    }
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -125,7 +143,9 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
               builder: (context, provider, _) {
                 final availableStudents = provider.students;
                 final selectedCount = provider.selectedStudentIds.length;
-                final totalCount = availableStudents.length;
+                final totalCount = provider.totalContent > 0
+                    ? provider.totalContent
+                    : availableStudents.length;
 
                 return Container(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
@@ -149,9 +169,11 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        'Select students to add',
-                        style: TextStyle(
+                      Text(
+                        provider.hasMore
+                            ? 'Select students ($totalCount available)'
+                            : 'Select students to add',
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -236,12 +258,63 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                   }
 
                   final avatarColors = AppColors.avatarColorPairs;
+                  final hasFooter = provider.hasMore || provider.isLoadingMore;
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: availableStudents.length,
-                    itemBuilder: (context, index) {
-                      final student = availableStudents[index];
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await provider.fetchStudentsByRouteId(
+                        routeId: widget.routeId,
+                        isRefresh: true,
+                      );
+                    },
+                    color: AppColors.primary,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      itemCount: availableStudents.length + (hasFooter ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == availableStudents.length) {
+                          if (provider.isLoadingMore) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: TextButton.icon(
+                                onPressed: () => provider.loadMoreStudents(
+                                  routeId: widget.routeId,
+                                ),
+                                icon: const Icon(Icons.expand_more_rounded,
+                                    size: 18),
+                                label: Text(
+                                  'Load More (${availableStudents.length}/${provider.totalContent})',
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  textStyle: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final student = availableStudents[index];
                       final isSelected = provider.selectedStudentIds.contains(
                         student.id,
                       );
@@ -288,27 +361,63 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                           ),
                           child: Row(
                             children: [
-                              // Avatar with gradient
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: colorPair,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
+                              // Avatar (tappable to view details)
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => StudentDetailsDialog.show(
+                                  context,
+                                  student.id,
+                                  initialStudent: student,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    initials.isEmpty ? '?' : initials,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: colorPair,
                                     ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colorPair[0].withAlpha(30),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: (student.image != null &&
+                                            student.image!.trim().isNotEmpty)
+                                        ? Image.network(
+                                            student.image!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                Center(
+                                              child: Text(
+                                                initials.isEmpty ? '?' : initials,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              initials.isEmpty ? '?' : initials,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -361,7 +470,36 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                                 ),
                               ),
 
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 8),
+
+                              // Info / Details icon button
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => StudentDetailsDialog.show(
+                                  context,
+                                  student.id,
+                                  initialStudent: student,
+                                ),
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(200),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: AppColors.border,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 16,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(width: 8),
 
                               // Custom Checkbox
                               AnimatedContainer(
@@ -393,9 +531,10 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                         ),
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
             ),
 
             // ── FOOTER BUTTON ───────────────────────────────────

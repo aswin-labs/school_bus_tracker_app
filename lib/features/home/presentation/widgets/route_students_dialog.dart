@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/home/presentation/provider/route_provider.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/student_details_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -22,6 +23,7 @@ class RouteStudentsDialog extends StatefulWidget {
 
 class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
 
   @override
@@ -38,6 +40,8 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
       }
     });
 
+    _scrollController.addListener(_onScroll);
+
     _searchController.addListener(() {
       if (mounted) {
         setState(() {
@@ -47,9 +51,22 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 150) {
+      final provider = context.read<RouteProvider>();
+      if (provider.hasMoreRouteStudents &&
+          !provider.isLoadingMoreStudents &&
+          !provider.isLoadingStudents) {
+        provider.loadMoreRouteStudents(widget.routeId);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -59,6 +76,14 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
+  }
+
+  void _openStudentDetails(StudentModel student) {
+    StudentDetailsDialog.show(
+      context,
+      student.id,
+      initialStudent: student,
+    );
   }
 
   List<StudentModel> _filterStudents(List<StudentModel> students) {
@@ -154,7 +179,14 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
                   ),
                   Consumer<RouteProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.routeStudents.length;
+                      final loadedCount = provider.routeStudents.length;
+                      final totalCount = provider.routeStudentsTotalContent > 0
+                          ? provider.routeStudentsTotalContent
+                          : loadedCount;
+                      final countText = provider.hasMoreRouteStudents
+                          ? '$loadedCount / $totalCount'
+                          : '$totalCount ${totalCount == 1 ? 'Student' : 'Students'}';
+
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -165,7 +197,7 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          '$count ${count == 1 ? 'Student' : 'Students'}',
+                          countText,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -234,6 +266,76 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
                   ),
                 ),
               ),
+            ),
+
+            // ── PAGINATION STATUS STRIP ──────────────────────────
+            Consumer<RouteProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoadingStudents ||
+                    provider.routeStudents.isEmpty ||
+                    provider.routeStudentsTotalPages <= 1) {
+                  return const SizedBox.shrink();
+                }
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(12),
+                    border: const Border(
+                      bottom: BorderSide(color: AppColors.divider, width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Page ${provider.routeStudentsCurrentPage} of ${provider.routeStudentsTotalPages}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Loaded ${provider.routeStudents.length} of ${provider.routeStudentsTotalContent} students',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      if (provider.hasMoreRouteStudents &&
+                          !provider.isLoadingMoreStudents)
+                        GestureDetector(
+                          onTap: () => provider.loadMoreRouteStudents(widget.routeId),
+                          child: const Text(
+                            'Load more',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             // ── STUDENT LIST ────────────────────────────────────
@@ -322,12 +424,95 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
                   }
 
                   final avatarColors = AppColors.avatarColorPairs;
+                  final showLoadMoreFooter = _searchQuery.isEmpty &&
+                      (provider.hasMoreRouteStudents ||
+                          provider.isLoadingMoreStudents ||
+                          provider.routeStudentsTotalPages > 1);
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      final student = students[index];
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await provider.fetchStudentsByRouteId(
+                        widget.routeId,
+                        isRefresh: true,
+                      );
+                    },
+                    color: AppColors.primary,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      itemCount: students.length + (showLoadMoreFooter ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == students.length) {
+                          if (provider.isLoadingMoreStudents) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Loading more students...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (provider.hasMoreRouteStudents) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Center(
+                                child: TextButton.icon(
+                                  onPressed: () => provider
+                                      .loadMoreRouteStudents(widget.routeId),
+                                  icon: const Icon(Icons.expand_more_rounded,
+                                      size: 18),
+                                  label: Text(
+                                    'Load More (${provider.routeStudents.length}/${provider.routeStudentsTotalContent})',
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    textStyle: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Center(
+                              child: Text(
+                                'All ${provider.routeStudentsTotalContent} students loaded',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textDisabled,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final student = students[index];
                       final colorPair =
                           avatarColors[index % avatarColors.length];
                       final studentClass = student.classGrade?.classname ?? '';
@@ -346,181 +531,216 @@ class _RouteStudentsDialogState extends State<RouteStudentsDialog> {
                           student.user?.name != null &&
                           student.user!.name!.trim().isNotEmpty;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBg,
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _openStudentDetails(student),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border, width: 1),
-                        ),
-                        child: Row(
-                          children: [
-                            // Avatar with gradient
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: colorPair,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  initials.isEmpty ? '?' : initials,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border, width: 1),
+                            ),
+                            child: Row(
+                              children: [
+                                // Avatar with image or gradient initials
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: colorPair,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: (student.image != null &&
+                                            student.image!.trim().isNotEmpty)
+                                        ? Image.network(
+                                            student.image!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                Center(
+                                              child: Text(
+                                                initials.isEmpty ? '?' : initials,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              initials.isEmpty ? '?' : initials,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
-                              ),
-                            ),
 
-                            const SizedBox(width: 12),
+                                const SizedBox(width: 12),
 
-                            // Student Info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                                // Student Info
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          student.fullName,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
-                                            letterSpacing: 0.1,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              student.fullName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.textPrimary,
+                                                letterSpacing: 0.1,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                          if (studentClass != "" &&
+                                              studentClass.isNotEmpty) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 6,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary.withAlpha(
+                                                  20,
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  6,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                studentClass,
+                                                style: const TextStyle(
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
-                                      if (studentClass != "" &&
-                                          studentClass.isNotEmpty) ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary.withAlpha(
-                                              20,
+                                      if (hasGuardian) ...[
+                                        const SizedBox(height: 3),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.person_outline_rounded,
+                                              size: 12,
+                                              color: AppColors.textMuted,
                                             ),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                student.user!.name!,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.textSecondary,
+                                                  letterSpacing: 0.1,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                          ),
-                                          child: Text(
-                                            studentClass,
-                                            style: const TextStyle(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.primary,
+                                          ],
+                                        ),
+                                      ],
+                                      if (hasPhone) ...[
+                                        const SizedBox(height: 3),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.phone_outlined,
+                                              size: 12,
+                                              color: AppColors.textMuted,
                                             ),
-                                          ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                student.user!.phone!,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.textSecondary,
+                                                  letterSpacing: 0.2,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ],
                                   ),
-                                  if (hasGuardian) ...[
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.person_outline_rounded,
-                                          size: 12,
-                                          color: AppColors.textMuted,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            student.user!.name!,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textSecondary,
-                                              letterSpacing: 0.1,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                  if (hasPhone) ...[
-                                    const SizedBox(height: 3),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.phone_outlined,
-                                          size: 12,
-                                          color: AppColors.textMuted,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            student.user!.phone!,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textSecondary,
-                                              letterSpacing: 0.2,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
+                                ),
 
-                            // Phone Call Button Action
-                            if (hasPhone) ...[
-                              const SizedBox(width: 8),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () =>
-                                      _makePhoneCall(student.user!.phone!),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.success.withAlpha(20),
+                                // Phone Call Button Action
+                                if (hasPhone) ...[
+                                  const SizedBox(width: 8),
+                                  Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _makePhoneCall(student.user!.phone!),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.success.withAlpha(50),
-                                        width: 1,
+                                      child: Container(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.success.withAlpha(20),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: AppColors.success.withAlpha(50),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.call_rounded,
+                                          size: 18,
+                                          color: AppColors.successDark,
+                                        ),
                                       ),
                                     ),
-                                    child: const Icon(
-                                      Icons.call_rounded,
-                                      size: 18,
-                                      color: AppColors.successDark,
-                                    ),
                                   ),
+                                ],
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 18,
+                                  color: AppColors.textDisabled,
                                 ),
-                              ),
-                            ],
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
             ),
 
             // ── FOOTER ──────────────────────────────────────────

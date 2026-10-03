@@ -40,6 +40,13 @@ class ApiEndpoints {
   // get all students by routeId
   static const getStudentsByRouteId = "/driver/getStudentsByRouteId";
 
+  // get student details by id
+  static const getStudentDetailsById = "/driver/getStudentDetailsById";
+
+  // get transport invoices by student id
+  static const getTransportInvoiceByStudentId =
+      "/driver/getTransportInvoiceByStudentId";
+
   // get students by routeId (unassigned stops)
   static const getStudentsWithUnassignedStopsByRouteId =
       "/driver/getStudentsWithUnassignedStopsByRouteId";

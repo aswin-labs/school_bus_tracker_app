@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/student_details_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
 
 class ArrivedStudentDialog extends StatefulWidget {
@@ -334,27 +335,63 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                           ),
                           child: Row(
                             children: [
-                              // Avatar
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: colorPair,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
+                              // Avatar (tappable to view details)
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => StudentDetailsDialog.show(
+                                  context,
+                                  student.id,
+                                  initialStudent: student,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    initials.isEmpty ? '?' : initials,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: colorPair,
                                     ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colorPair[0].withAlpha(30),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: (student.image != null &&
+                                            student.image!.trim().isNotEmpty)
+                                        ? Image.network(
+                                            student.image!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                Center(
+                                              child: Text(
+                                                initials.isEmpty ? '?' : initials,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              initials.isEmpty ? '?' : initials,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -405,6 +442,33 @@ class _ArrivedStudentDialogState extends State<ArrivedStudentDialog> {
                                       ],
                                     ),
                                   ],
+                                ),
+                              ),
+                              // Info / Details icon button
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => StudentDetailsDialog.show(
+                                  context,
+                                  student.id,
+                                  initialStudent: student,
+                                ),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(200),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: AppColors.border,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 16,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
                               // Status badge

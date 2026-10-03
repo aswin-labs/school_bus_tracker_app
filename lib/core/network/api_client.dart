@@ -9,6 +9,7 @@ class ApiClient {
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.acadobsDevBaseUrl,
+        // baseUrl: ApiConfig.acadobsProdBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         followRedirects: true,
@@ -33,9 +34,17 @@ class ApiClient {
   }
 
   /// Generic GET request
-  static Future<Response> get(String endpoint, {dynamic data}) async {
+  static Future<Response> get(
+    String endpoint, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      return await _dio.get(endpoint, data: data);
+      return await _dio.get(
+        endpoint,
+        data: data,
+        queryParameters: queryParameters,
+      );
     } on DioException catch (e) {
       throw Exception('GET request failed: $e');
     }

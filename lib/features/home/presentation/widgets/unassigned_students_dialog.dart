@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/student_details_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/student_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/student_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,6 +24,7 @@ class UnassignedStudentsDialog extends StatefulWidget {
 
 class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
 
   @override
@@ -39,6 +41,8 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
       }
     });
 
+    _scrollController.addListener(_onScroll);
+
     _searchController.addListener(() {
       if (mounted) {
         setState(() {
@@ -48,9 +52,22 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
     });
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 150) {
+      final provider = context.read<StudentProvider>();
+      if (provider.hasMore &&
+          !provider.isLoadingMore &&
+          !provider.isLoading) {
+        provider.loadMoreStudents(routeId: widget.routeId);
+      }
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -164,7 +181,14 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
                   ),
                   Consumer<StudentProvider>(
                     builder: (context, provider, _) {
-                      final count = provider.students.length;
+                      final loadedCount = provider.students.length;
+                      final totalCount = provider.totalContent > 0
+                          ? provider.totalContent
+                          : loadedCount;
+                      final countText = provider.hasMore
+                          ? '$loadedCount / $totalCount'
+                          : '$totalCount ${totalCount == 1 ? 'Student' : 'Students'}';
+
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -175,7 +199,7 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          '$count ${count == 1 ? 'Student' : 'Students'}',
+                          countText,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -277,6 +301,75 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
               ),
             ),
 
+            // ── PAGINATION STATUS STRIP ──────────────────────────
+            Consumer<StudentProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading ||
+                    provider.students.isEmpty ||
+                    provider.totalPages <= 1) {
+                  return const SizedBox.shrink();
+                }
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(12),
+                    border: const Border(
+                      bottom: BorderSide(color: AppColors.divider, width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Page ${provider.currentPage} of ${provider.totalPages}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Loaded ${provider.students.length} of ${provider.totalContent} unassigned students',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      if (provider.hasMore && !provider.isLoadingMore)
+                        GestureDetector(
+                          onTap: () => provider.loadMoreStudents(routeId: widget.routeId),
+                          child: const Text(
+                            'Load more',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
             // ── STUDENT LIST ────────────────────────────────────
             Expanded(
               child: Consumer<StudentProvider>(
@@ -363,12 +456,96 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
                   }
 
                   final avatarColors = AppColors.avatarColorPairs;
+                  final showLoadMoreFooter = _searchQuery.isEmpty &&
+                      (provider.hasMore ||
+                          provider.isLoadingMore ||
+                          provider.totalPages > 1);
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      final student = students[index];
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await provider.fetchStudentsByRouteId(
+                        routeId: widget.routeId,
+                        isRefresh: true,
+                      );
+                    },
+                    color: AppColors.primary,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      itemCount: students.length + (showLoadMoreFooter ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == students.length) {
+                          if (provider.isLoadingMore) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Loading more students...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (provider.hasMore) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Center(
+                                child: TextButton.icon(
+                                  onPressed: () => provider.loadMoreStudents(
+                                    routeId: widget.routeId,
+                                  ),
+                                  icon: const Icon(Icons.expand_more_rounded,
+                                      size: 18),
+                                  label: Text(
+                                    'Load More (${provider.students.length}/${provider.totalContent})',
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    textStyle: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Center(
+                              child: Text(
+                                'All ${provider.totalContent} unassigned students loaded',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textDisabled,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final student = students[index];
                       final colorPair =
                           avatarColors[index % avatarColors.length];
                       final studentClass = student.classGrade?.classname ?? '';
@@ -387,40 +564,70 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
                           student.user?.name != null &&
                           student.user!.name!.trim().isNotEmpty;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBg,
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => StudentDetailsDialog.show(
+                            context,
+                            student.id,
+                            initialStudent: student,
+                          ),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border, width: 1),
-                        ),
-                        child: Row(
-                          children: [
-                            // Avatar with gradient
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: colorPair,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  initials.isEmpty ? '?' : initials,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border, width: 1),
+                            ),
+                            child: Row(
+                              children: [
+                                // Avatar with image or gradient initials
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: colorPair,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: (student.image != null &&
+                                            student.image!.trim().isNotEmpty)
+                                        ? Image.network(
+                                            student.image!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                Center(
+                                              child: Text(
+                                                initials.isEmpty ? '?' : initials,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              initials.isEmpty ? '?' : initials,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
-                              ),
-                            ),
 
                             const SizedBox(width: 12),
 
@@ -526,41 +733,50 @@ class _UnassignedStudentsDialogState extends State<UnassignedStudentsDialog> {
                             ),
 
                             // Phone Call Button Action
-                            if (hasPhone) ...[
-                              const SizedBox(width: 8),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () =>
-                                      _makePhoneCall(student.user!.phone!),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.success.withAlpha(20),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.success.withAlpha(50),
-                                        width: 1,
+                              if (hasPhone) ...[
+                                const SizedBox(width: 8),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () =>
+                                        _makePhoneCall(student.user!.phone!),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.success.withAlpha(20),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.success.withAlpha(50),
+                                          width: 1,
+                                        ),
                                       ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.call_rounded,
-                                      size: 18,
-                                      color: AppColors.successDark,
+                                      child: const Icon(
+                                        Icons.call_rounded,
+                                        size: 18,
+                                        color: AppColors.successDark,
+                                      ),
                                     ),
                                   ),
                                 ),
+                              ],
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                                color: AppColors.textDisabled,
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                      );
+                      ),
+                    );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
             ),
 
             // ── FOOTER ──────────────────────────────────────────

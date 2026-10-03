@@ -7,9 +7,11 @@ class StudentTile extends StatelessWidget {
   final String guardianName;
   final String? phoneNumber;
   final String? className;
+  final String? imageUrl;
   final List<Color> colorPair;
   final VoidCallback? onPhoneTap;
   final VoidCallback? onDeleteTap;
+  final VoidCallback? onTap;
   final bool isDeleting;
 
   const StudentTile({
@@ -18,9 +20,11 @@ class StudentTile extends StatelessWidget {
     required this.guardianName,
     this.phoneNumber,
     this.className,
+    this.imageUrl,
     required this.colorPair,
     this.onPhoneTap,
     this.onDeleteTap,
+    this.onTap,
     this.isDeleting = false,
   });
 
@@ -44,19 +48,25 @@ class StudentTile extends StatelessWidget {
 
     final hasPhone = phoneNumber != null && phoneNumber!.trim().isNotEmpty;
     final hasGuardian = guardianName.trim().isNotEmpty;
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.cardBg,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1),
-        ),
-        child: Row(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 1),
+            ),
+            child: Row(
           children: [
-            // Avatar with gradient
+            // Avatar with image or gradient initials
             Container(
               width: 44,
               height: 44,
@@ -68,16 +78,35 @@ class StudentTile extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Text(
-                  initials.isEmpty ? '?' : initials,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: hasImage
+                    ? Image.network(
+                        imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            initials.isEmpty ? '?' : initials,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          initials.isEmpty ? '?' : initials,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(width: 12),
@@ -242,9 +271,19 @@ class StudentTile extends StatelessWidget {
                 ),
               ),
             ],
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.textDisabled,
+              ),
+            ],
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

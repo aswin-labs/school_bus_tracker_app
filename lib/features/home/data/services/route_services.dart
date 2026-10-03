@@ -23,9 +23,18 @@ class RouteServices {
   }
 
   // GET students by routeId
-  Future<Response> fetchStudentsByRouteId(int routeId) async {
+  Future<Response> fetchStudentsByRouteId(
+    int routeId, {
+    int page = 1,
+    int? limit,
+  }) async {
+    final Map<String, dynamic> queryParams = {
+      "page": page,
+      if (limit != null) "limit": limit,
+    };
     return await ApiClient.get(
       "${ApiEndpoints.getStudentsByRouteId}/$routeId",
+      queryParameters: queryParams,
     );
   }
 }

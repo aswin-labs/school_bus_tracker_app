@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
+import 'package:school_bus_tracker/core/utils/location_helper.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/core/widgets/add_button.dart';
 import 'package:school_bus_tracker/core/widgets/custom_more_menu.dart';
@@ -11,6 +12,7 @@ import 'package:school_bus_tracker/features/live_tracking/presentation/provider/
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/add_student_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/assign_pair_stops_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/edit_stop_dialog.dart';
+import 'package:school_bus_tracker/features/home/presentation/widgets/student_details_dialog.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/student_tile.dart';
 
 class StopDetailsBottomsheet extends StatefulWidget {
@@ -30,6 +32,7 @@ class StopDetailsBottomsheet extends StatefulWidget {
 
 class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
   late final StopsProvider _stopsProvider;
+  bool _isUpdatingLocation = false;
 
   @override
   void initState() {
@@ -264,6 +267,189 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
     }
   }
 
+  Future<void> _updateStopToCurrentLocation(StopModel stop) async {
+    final shouldUpdate = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.my_location_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Set Stop Location',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to update the location of "${stop.stopName}" to your device\'s current GPS position?',
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      (stop.latitude != 0.0 || stop.longitude != 0.0)
+                          ? Icons.pin_drop_rounded
+                          : Icons.location_off_rounded,
+                      size: 16,
+                      color: (stop.latitude != 0.0 || stop.longitude != 0.0)
+                          ? AppColors.primary
+                          : AppColors.textDisabled,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'CURRENT COORDINATES',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textMuted,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            (stop.latitude != 0.0 || stop.longitude != 0.0)
+                                ? '${stop.latitude.toStringAsFixed(6)}, ${stop.longitude.toStringAsFixed(6)}'
+                                : 'Not set',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: (stop.latitude != 0.0 || stop.longitude != 0.0)
+                                  ? AppColors.textPrimary
+                                  : AppColors.textDisabled,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+              ),
+              child: const Text(
+                'Update Location',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldUpdate != true || !mounted) return;
+
+    setState(() => _isUpdatingLocation = true);
+
+    try {
+      final position = await LocationHelper.getCurrentPosition();
+
+      if (!mounted) return;
+
+      final error = await context.read<StopsProvider>().updateStop(
+            stopId: stop.id,
+            stopName: stop.stopName,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            routeId: widget.routeId,
+          );
+
+      if (!mounted) return;
+
+      if (error == null) {
+        SnackbarHelper.showSuccess(
+          context,
+          message: 'Stop location updated successfully',
+        );
+      } else {
+        SnackbarHelper.showError(context, message: error);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final errorMsg = e is LocationException
+          ? e.message
+          : 'Failed to fetch current location: $e';
+      SnackbarHelper.showError(context, message: errorMsg);
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingLocation = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -353,14 +539,17 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                               icon: Icons.edit_rounded,
                               iconColor: AppColors.primary,
                               textColor: AppColors.textPrimary,
-                              onTap: () {
-                                showDialog(
+                              onTap: () async {
+                                final updated = await showDialog<bool>(
                                   context: context,
                                   builder: (_) => EditStopDialog(
                                     stop: stop,
                                     routeId: widget.routeId,
                                   ),
                                 );
+                                if (updated == true && mounted) {
+                                  _loadStopDetails();
+                                }
                               },
                             ),
                             MoreMenuOption(
@@ -422,7 +611,7 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                     return CustomScrollView(
                       controller: scrollController,
                       slivers: [
-                        // Stop Info Card (Informational - Not button-like)
+                        // Stop Info & Location Card
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -436,49 +625,194 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                   width: 1.5,
                                 ),
                               ),
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 56,
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      gradient: AppColors.primaryGradient,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: const Icon(
-                                      Icons.location_on_rounded,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 52,
+                                        height: 52,
+                                        decoration: BoxDecoration(
+                                          gradient: AppColors.primaryGradient,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: const Icon(
+                                          Icons.location_on_rounded,
+                                          color: Colors.white,
+                                          size: 26,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'STOP NAME',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textMuted,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              stop.stopName,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary,
+                                                letterSpacing: 0.2,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'STOP NAME',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textMuted,
-                                            letterSpacing: 1.2,
+                                  const SizedBox(height: 14),
+                                  // Current Coordinates Bar
+                                  Builder(
+                                    builder: (context) {
+                                      final hasCoords = stop.latitude != 0.0 ||
+                                          stop.longitude != 0.0;
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 9,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: hasCoords
+                                                ? AppColors.primary.withAlpha(35)
+                                                : AppColors.border,
+                                            width: 1,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          stop.stopName,
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                            letterSpacing: 0.2,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              hasCoords
+                                                  ? Icons.pin_drop_rounded
+                                                  : Icons.location_off_rounded,
+                                              size: 16,
+                                              color: hasCoords
+                                                  ? AppColors.primary
+                                                  : AppColors.textDisabled,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'COORDINATES',
+                                                    style: TextStyle(
+                                                      fontSize: 9,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: AppColors.textMuted,
+                                                      letterSpacing: 0.8,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 1),
+                                                  Text(
+                                                    hasCoords
+                                                        ? '${stop.latitude.toStringAsFixed(6)}, ${stop.longitude.toStringAsFixed(6)}'
+                                                        : 'Location not set yet',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: hasCoords
+                                                          ? AppColors.textPrimary
+                                                          : AppColors.textMuted,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Update to Current Location Action Button
+                                  InkWell(
+                                    onTap: (_isUpdatingLocation ||
+                                            provider.isUpdatingStop)
+                                        ? null
+                                        : () => _updateStopToCurrentLocation(
+                                              stop,
+                                            ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withAlpha(20),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.primary.withAlpha(60),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          if (_isUpdatingLocation ||
+                                              provider.isUpdatingStop) ...[
+                                            const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              'Updating Location...',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primary,
+                                                letterSpacing: 0.2,
+                                              ),
+                                            ),
+                                          ] else ...[
+                                            const Icon(
+                                              Icons.my_location_rounded,
+                                              size: 18,
+                                              color: AppColors.primary,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              'Set Stop to Current Location',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primary,
+                                                letterSpacing: 0.2,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -722,7 +1056,15 @@ class _StopDetailsBottomsheetState extends State<StopDetailsBottomsheet> {
                                           guardianName: student.user?.name ?? '',
                                           phoneNumber: student.user?.phone,
                                           className: student.classGrade?.classname,
+                                          imageUrl: student.image,
                                           colorPair: colorPair,
+                                          onTap: () {
+                                            StudentDetailsDialog.show(
+                                              context,
+                                              student.id,
+                                              initialStudent: student,
+                                            );
+                                          },
                                           onDeleteTap: () =>
                                               _confirmDeleteStudent(student),
                                           isDeleting:

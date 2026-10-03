@@ -3,10 +3,50 @@ import 'package:school_bus_tracker/core/network/api_client.dart';
 import 'package:school_bus_tracker/core/network/api_endpoints.dart';
 
 class StudentServices {
-  // GET students by routeId
-  Future<Response> fetchStudentsByRouteId({required int routeId}) async {
+  // GET students by routeId (students with unassigned stops)
+  Future<Response> fetchStudentsByRouteId({
+    required int routeId,
+    int page = 1,
+    int? limit,
+  }) async {
+    final Map<String, dynamic> queryParams = {
+      "page": page,
+      if (limit != null) "limit": limit,
+    };
     final response = await ApiClient.get(
       "${ApiEndpoints.getStudentsWithUnassignedStopsByRouteId}/$routeId",
+      queryParameters: queryParams,
+    );
+    return response;
+  }
+
+  // GET students with unassigned stops by routeId (explicit endpoint name)
+  Future<Response> fetchStudentsWithUnassignedStopsByRouteId({
+    required int routeId,
+    int page = 1,
+    int? limit,
+  }) async {
+    return fetchStudentsByRouteId(
+      routeId: routeId,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  // GET student details by id
+  Future<Response> fetchStudentDetailsById({required int studentId}) async {
+    final response = await ApiClient.get(
+      "${ApiEndpoints.getStudentDetailsById}/$studentId",
+    );
+    return response;
+  }
+
+  // GET transport invoices by student id
+  Future<Response> fetchTransportInvoicesByStudentId({
+    required int studentId,
+  }) async {
+    final response = await ApiClient.get(
+      "${ApiEndpoints.getTransportInvoiceByStudentId}/$studentId",
     );
     return response;
   }

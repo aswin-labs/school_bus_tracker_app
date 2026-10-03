@@ -31,6 +31,21 @@ class RouteProvider extends ChangeNotifier {
   bool _isLoadingStudents = false;
   bool get isLoadingStudents => _isLoadingStudents;
 
+  bool _isLoadingMoreStudents = false;
+  bool get isLoadingMoreStudents => _isLoadingMoreStudents;
+
+  int _routeStudentsCurrentPage = 1;
+  int get routeStudentsCurrentPage => _routeStudentsCurrentPage;
+
+  int _routeStudentsTotalPages = 1;
+  int get routeStudentsTotalPages => _routeStudentsTotalPages;
+
+  int _routeStudentsTotalContent = 0;
+  int get routeStudentsTotalContent => _routeStudentsTotalContent;
+
+  bool get hasMoreRouteStudents =>
+      _routeStudentsCurrentPage < _routeStudentsTotalPages;
+
   List<RouteModel> _routes = [];
   List<RouteModel> get driverRoutes => _routes;
 
@@ -180,16 +195,39 @@ class RouteProvider extends ChangeNotifier {
 
   void clearRouteStudents() {
     _routeStudents = [];
+    _routeStudentsCurrentPage = 1;
+    _routeStudentsTotalPages = 1;
+    _routeStudentsTotalContent = 0;
+    _isLoadingStudents = false;
+    _isLoadingMoreStudents = false;
     notifyListeners();
   }
 
-  Future<String?> fetchStudentsByRouteId(int routeId) async {
-    _isLoadingStudents = true;
-    _routeStudents = [];
-    notifyListeners();
+  Future<String?> fetchStudentsByRouteId(
+    int routeId, {
+    int page = 1,
+    bool isRefresh = false,
+  }) async {
+    if (page == 1 || isRefresh) {
+      _isLoadingStudents = true;
+      if (!isRefresh) {
+        _routeStudents = [];
+      }
+      _routeStudentsCurrentPage = 1;
+      _routeStudentsTotalPages = 1;
+      _routeStudentsTotalContent = 0;
+      notifyListeners();
+    } else {
+      if (_isLoadingMoreStudents || _isLoadingStudents) return null;
+      _isLoadingMoreStudents = true;
+      notifyListeners();
+    }
 
     try {
-      final response = await _routeServices.fetchStudentsByRouteId(routeId);
+      final response = await _routeServices.fetchStudentsByRouteId(
+        routeId,
+        page: page,
+      );
 
       log('Fetch route students response: ${response.data}');
 
@@ -201,21 +239,42 @@ class RouteProvider extends ChangeNotifier {
         );
       }
 
-      final rawData = response.data['data'] ?? response.data['students'] ?? response.data;
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final parsed = PaginatedStudentsResponse.fromJson(
+          data,
+          preferredKey: 'students',
+        );
 
-      if (rawData is! List) {
-        _routeStudents = [];
-        notifyListeners();
-        return null;
+        _routeStudentsCurrentPage = parsed.currentPage;
+        _routeStudentsTotalPages = parsed.totalPages;
+        _routeStudentsTotalContent = parsed.totalContent > 0
+            ? parsed.totalContent
+            : parsed.students.length;
+
+        if (page == 1 || isRefresh) {
+          _routeStudents = parsed.students;
+        } else {
+          final existingIds = _routeStudents.map((s) => s.id).toSet();
+          for (final s in parsed.students) {
+            if (!existingIds.contains(s.id)) {
+              _routeStudents.add(s);
+              existingIds.add(s.id);
+            }
+          }
+        }
+      } else if (data is List) {
+        final list = data
+            .map<StudentModel>((json) => StudentModel.fromJson(json))
+            .toList();
+        _routeStudents = list;
+        _routeStudentsCurrentPage = 1;
+        _routeStudentsTotalPages = 1;
+        _routeStudentsTotalContent = list.length;
       }
 
-      _routeStudents = rawData
-          .map<StudentModel>((json) => StudentModel.fromJson(json))
-          .toList();
-
       notifyListeners();
-
-      log('Fetched route students: ${_routeStudents.length}');
+      log('Fetched route students: ${_routeStudents.length} (total: $_routeStudentsTotalContent, page: $_routeStudentsCurrentPage/$_routeStudentsTotalPages)');
 
       return null;
     } catch (e, stackTrace) {
@@ -224,7 +283,18 @@ class RouteProvider extends ChangeNotifier {
       return ApiErrorUtils.getExceptionErrorMessage(e);
     } finally {
       _isLoadingStudents = false;
+      _isLoadingMoreStudents = false;
       notifyListeners();
     }
+  }
+
+  Future<String?> loadMoreRouteStudents(int routeId) async {
+    if (!hasMoreRouteStudents || _isLoadingStudents || _isLoadingMoreStudents) {
+      return null;
+    }
+    return await fetchStudentsByRouteId(
+      routeId,
+      page: _routeStudentsCurrentPage + 1,
+    );
   }
 }
