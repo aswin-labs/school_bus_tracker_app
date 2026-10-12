@@ -21,7 +21,19 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const SizedBox.shrink()),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Image(
+            image: AssetImage('assets/icons/logo-splash.png'),
+            width: 180,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    ),
 
     // login
     GoRoute(
