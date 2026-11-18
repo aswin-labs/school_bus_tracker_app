@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:school_bus_tracker/core/network/google_map_api.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/data/models/stop_model.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/live_location_provider.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/provider/stops_provider.dart';
-import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/select_location_map_screen.dart';
+import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/place_search_screen.dart';
 
 class EditStopDialog extends StatefulWidget {
   final StopModel stop;
@@ -27,6 +28,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
     _titleController = TextEditingController(text: widget.stop.stopName);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final initialLocation = LatLng(
         widget.stop.latitude,
         widget.stop.longitude,
@@ -39,6 +41,33 @@ class _EditStopDialogState extends State<EditStopDialog> {
   void dispose() {
     _titleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openPlaceSearch() async {
+    final stopsProvider = context.read<StopsProvider>();
+    final stopLocation = LatLng(widget.stop.latitude, widget.stop.longitude);
+    final initialLocation = stopsProvider.selectedLocation ?? stopLocation;
+    final isOriginalLocation =
+        initialLocation.latitude == stopLocation.latitude &&
+        initialLocation.longitude == stopLocation.longitude;
+    final enteredName = _titleController.text.trim();
+
+    final result = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlaceSearchScreen(
+          apiKey: GoogleMapApi.url,
+          initialLocation: initialLocation,
+          initialPlaceName: isOriginalLocation
+              ? (enteredName.isNotEmpty ? enteredName : widget.stop.stopName)
+              : null,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      stopsProvider.setSelectedLocation(result);
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -246,14 +275,7 @@ class _EditStopDialogState extends State<EditStopDialog> {
                         icon: Icons.map_rounded,
                         label: 'Select from Map',
                         color: AppColors.primaryDark,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SelectLocationMapScreen(),
-                            ),
-                          );
-                        },
+                        onTap: _openPlaceSearch,
                       ),
 
                       const SizedBox(height: 24),
@@ -492,13 +514,17 @@ class _LocationActionButton extends StatelessWidget {
                   )
                 : Icon(icon, size: 18, color: color),
             const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-                letterSpacing: 0.3,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ],

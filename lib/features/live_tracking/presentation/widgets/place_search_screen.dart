@@ -6,6 +6,7 @@ import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart'
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:school_bus_tracker/core/theme/app_colors.dart';
 import 'package:school_bus_tracker/core/utils/location_helper.dart';
+import 'package:school_bus_tracker/core/utils/snackbar_helper.dart';
 import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/web_map/places_web_registrar.dart';
 
 /// A full-screen place-search + map confirmation screen.
@@ -13,11 +14,13 @@ import 'package:school_bus_tracker/features/live_tracking/presentation/widgets/w
 class PlaceSearchScreen extends StatefulWidget {
   final String apiKey;
   final LatLng? initialLocation;
+  final String? initialPlaceName;
 
   const PlaceSearchScreen({
     super.key,
     required this.apiKey,
     this.initialLocation,
+    this.initialPlaceName,
   });
 
   @override
@@ -34,6 +37,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
   bool _showMap = true;
   bool _isFetchingDetails = false;
   bool _isLocatingCurrent = false;
+  bool _hasSearchText = false;
 
   LatLng? _selectedLatLng;
   String? _selectedPlaceName;
@@ -51,6 +55,9 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
     ensurePlacesWebInitialized();
     _places = FlutterGooglePlacesSdk(widget.apiKey);
     _selectedLatLng = widget.initialLocation;
+    _selectedPlaceName = widget.initialLocation != null
+        ? widget.initialPlaceName
+        : null;
     _showMap = true;
 
     if (_selectedLatLng == null) {
@@ -71,11 +78,26 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
 
   void _onSearchChanged() {
     if (_ignoreSearchChange) return;
-    final query = _searchController.text.trim();
+    final rawText = _searchController.text;
+    final hasText = rawText.isNotEmpty;
+    final query = rawText.trim();
+
     if (query.isEmpty) {
-      setState(() => _predictions = []);
+      _debounce?.cancel();
+      if (_predictions.isNotEmpty || _isSearching || _hasSearchText != hasText) {
+        setState(() {
+          _hasSearchText = hasText;
+          _predictions = [];
+          _isSearching = false;
+        });
+      }
       return;
     }
+
+    if (_hasSearchText != hasText) {
+      setState(() => _hasSearchText = hasText);
+    }
+
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () => _search(query));
   }
@@ -88,11 +110,15 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
         countries: [],
         placeTypesFilter: [],
       );
-      if (mounted && !_ignoreSearchChange) {
+      if (mounted &&
+          !_ignoreSearchChange &&
+          _searchController.text.trim() == query) {
         setState(() => _predictions = result.predictions);
       }
     } catch (_) {
-      if (mounted) setState(() => _predictions = []);
+      if (mounted && _searchController.text.trim() == query) {
+        setState(() => _predictions = []);
+      }
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
@@ -120,6 +146,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
         _ignoreSearchChange = false;
 
         setState(() {
+          _hasSearchText = _searchController.text.isNotEmpty;
           _selectedLatLng = latLng;
           _selectedPlaceName = prediction.primaryText;
           _predictions = [];
@@ -127,15 +154,17 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
         });
         _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not determine location for this place')),
+        SnackbarHelper.showError(
+          context,
+          message: 'Could not determine location for this place',
         );
       }
     } catch (e) {
       debugPrint('Error fetching place details: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not fetch place details')),
+        SnackbarHelper.showError(
+          context,
+          message: 'Could not fetch place details',
         );
       }
     } finally {
@@ -143,7 +172,8 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
     }
   }
 
-  Future<void> _fetchCurrentLocation() async {
+  Future<void> _fetchCurrentLocation({bool showErrorOnFailure = false}) async {
+    if (_isLocatingCurrent) return;
     setState(() => _isLocatingCurrent = true);
     try {
       final pos = await LocationHelper.getCurrentPosition();
@@ -158,8 +188,19 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
           CameraUpdate.newLatLngZoom(latLng, 16),
         );
       }
+    } on LocationException catch (e) {
+      debugPrint('Error getting current location: $e');
+      if (mounted && showErrorOnFailure) {
+        SnackbarHelper.showError(context, message: e.message);
+      }
     } catch (e) {
       debugPrint('Error getting current location: $e');
+      if (mounted && showErrorOnFailure) {
+        SnackbarHelper.showError(
+          context,
+          message: 'Could not fetch current location',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLocatingCurrent = false);
     }
@@ -186,140 +227,151 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── HEADER ──────────────────────────────────────────
-            Container(
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-              ),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top bar
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(30),
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: Colors.white,
-                            size: 18,
+      body: Column(
+        children: [
+          // ── HEADER ──────────────────────────────────────────
+          Container(
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top bar
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(30),
+                              borderRadius: BorderRadius.circular(11),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'SEARCH LOCATION',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white70,
-                                letterSpacing: 1.2,
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'SEARCH LOCATION',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white70,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 1),
-                            Text(
-                              'Search & Pin Stop Location',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                              SizedBox(height: 1),
+                              Text(
+                                'Search & Pin Stop Location',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Search field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      autofocus: false,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                    const SizedBox(height: 12),
+
+                    // Search field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      decoration: InputDecoration(
-                        hintText: 'Search for a place...',
-                        hintStyle: const TextStyle(
-                          fontSize: 13.5,
-                          color: AppColors.textMuted,
-                          fontWeight: FontWeight.normal,
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _focusNode,
+                        autofocus: false,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
                         ),
-                        prefixIcon: _isSearching || _isFetchingDetails
-                            ? const Padding(
-                                padding: EdgeInsets.all(12),
-                                child: SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary,
+                        decoration: InputDecoration(
+                          filled: false,
+                          hintText: 'Search for a place...',
+                          hintStyle: const TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          prefixIcon: _isSearching || _isFetchingDetails
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
                                   ),
-                                ),
-                              )
-                            : const Icon(
-                                Icons.search_rounded,
-                                size: 20,
-                                color: AppColors.textMuted,
-                              ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? GestureDetector(
-                                onTap: () {
-                                  _debounce?.cancel();
-                                  _searchController.clear();
-                                  setState(() => _predictions = []);
-                                },
-                                child: const Icon(
-                                  Icons.close_rounded,
-                                  size: 18,
+                                )
+                              : const Icon(
+                                  Icons.search_rounded,
+                                  size: 20,
                                   color: AppColors.textMuted,
                                 ),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 13,
+                          suffixIcon: _hasSearchText
+                              ? GestureDetector(
+                                  onTap: () {
+                                    _debounce?.cancel();
+                                    _searchController.clear();
+                                    setState(() {
+                                      _hasSearchText = false;
+                                      _predictions = [];
+                                      _isSearching = false;
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: AppColors.textMuted,
+                                  ),
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 13,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+          ),
 
             // ── BODY CONTENT ────────────────────────────────────
             Expanded(
@@ -407,7 +459,19 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                                   target: _selectedLatLng ?? _defaultCenter,
                                   zoom: 15,
                                 ),
-                                onMapCreated: (c) => _mapController = c,
+                                onMapCreated: (c) {
+                                  _mapController = c;
+                                  if (_selectedLatLng != null &&
+                                      _selectedLatLng !=
+                                          widget.initialLocation) {
+                                    c.moveCamera(
+                                      CameraUpdate.newLatLngZoom(
+                                        _selectedLatLng!,
+                                        16,
+                                      ),
+                                    );
+                                  }
+                                },
                                 onTap: _onMapTap,
                                 markers: _selectedLatLng == null
                                     ? {}
@@ -433,39 +497,45 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                                 top: 12,
                                 left: 16,
                                 right: 16,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(15),
-                                        blurRadius: 8,
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
                                       ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.touch_app_rounded,
-                                        size: 15,
-                                        color: AppColors.primary.withAlpha(200),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withAlpha(240),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withAlpha(15),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        'Tap on the map to adjust pin',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textSecondary,
-                                        ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.touch_app_rounded,
+                                            size: 15,
+                                            color: AppColors.primary.withAlpha(
+                                              200,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Tap on the map to adjust pin',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -476,7 +546,9 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                                 right: 16,
                                 child: FloatingActionButton.small(
                                   heroTag: 'places_my_location_btn',
-                                  onPressed: _fetchCurrentLocation,
+                                  onPressed: () => _fetchCurrentLocation(
+                                    showErrorOnFailure: true,
+                                  ),
                                   backgroundColor: Colors.white,
                                   foregroundColor: AppColors.primary,
                                   elevation: 4,
@@ -579,17 +651,47 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                _selectedPlaceName != null
-                                    ? _selectedPlaceName!
-                                    : '${_selectedLatLng!.latitude.toStringAsFixed(6)}, ${_selectedLatLng!.longitude.toStringAsFixed(6)}',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_selectedPlaceName != null &&
+                                      _selectedPlaceName!
+                                          .trim()
+                                          .isNotEmpty) ...[
+                                    Text(
+                                      _selectedPlaceName!,
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${_selectedLatLng!.latitude.toStringAsFixed(6)}, ${_selectedLatLng!.longitude.toStringAsFixed(6)}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ] else
+                                    Text(
+                                      '${_selectedLatLng!.latitude.toStringAsFixed(6)}, ${_selectedLatLng!.longitude.toStringAsFixed(6)}',
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
                               ),
                             ),
                           ],
@@ -631,8 +733,7 @@ class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
                   ],
                 ),
               ),
-          ],
-        ),
+        ],
       ),
     );
   }
